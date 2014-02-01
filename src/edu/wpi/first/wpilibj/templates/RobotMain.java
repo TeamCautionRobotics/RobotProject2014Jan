@@ -26,11 +26,18 @@ public class RobotMain extends SimpleRobot {
     Talon bl;
     Talon fr;
     Talon br;
+    
+    private VisionProcessing visionProcessing;
 
     public RobotMain() {
     }
 
     public void robotInit() {
+
+        camera = AxisCamera.getInstance();
+        
+        visionProcessing = new VisionProcessing();
+        visionProcessing.init(camera);
         
         driverStation = DriverStation.getInstance();
         
@@ -44,8 +51,6 @@ public class RobotMain extends SimpleRobot {
         chassis = new RobotDrive(fl, bl, fr, br);
         chassis.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);
         chassis.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
-
-//        camera = AxisCamera.getInstance();
     }
 
     public void autonomous() {
