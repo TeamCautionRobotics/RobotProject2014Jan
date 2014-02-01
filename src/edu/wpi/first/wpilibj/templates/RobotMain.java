@@ -1,6 +1,7 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Servo;
@@ -19,6 +20,7 @@ public class RobotMain extends SimpleRobot {
     Joystick rightStick = new Joystick(2);
     AxisCamera camera;
     Servo servoTest;
+    DriverStation driverStation;
 
     Talon fl;
     Talon bl;
@@ -29,7 +31,9 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void robotInit() {
-
+        
+        driverStation = DriverStation.getInstance();
+        
         servoTest = new Servo(5);
 
         fl = new Talon(1);
@@ -41,7 +45,7 @@ public class RobotMain extends SimpleRobot {
         chassis.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);
         chassis.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
 
-        //camera = AxisCamera.getInstance();
+//        camera = AxisCamera.getInstance();
     }
 
     public void autonomous() {
@@ -50,6 +54,7 @@ public class RobotMain extends SimpleRobot {
 
     public void operatorControl() {
         chassis.setSafetyEnabled(false);
+        SmartDashboard.putString("Alliance", driverStation.getAlliance().name);
         while (this.isOperatorControl() && this.isEnabled()) {
             SmartDashboard.putNumber("Mecanum X", getMecX());
             SmartDashboard.putNumber("Mecanum Y", getMecY());
