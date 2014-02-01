@@ -89,8 +89,9 @@ public class VisionProcessing {
 	horizontalTargets = new int[MAX_PARTICLES];
     }
     
-    public void autoUpdate() throws AxisCameraException{
+    public void autonomousUpdate() throws AxisCameraException{
         try {
+            System.out.println("Camera Is Updating");
             /**
              * Do the image capture with the camera and apply the algorithm described above. This
              * sample will either get images from the camera or from an image file stored in the top
@@ -98,7 +99,7 @@ public class VisionProcessing {
              * 
              */
             ColorImage image = camera.getImage();     // comment if using stored images
-            BinaryImage thresholdImage = image.thresholdHSV(105, 137, 230, 255, 133, 183);   // keep only green objects
+            BinaryImage thresholdImage = image.thresholdHSV(0, 255, 0, 255, 133, 183);   // keep only green objects
             //thresholdImage.write("/threshold.bmp");
             BinaryImage filteredImage = thresholdImage.particleFilter(cc);           // filter out small particles
             //filteredImage.write("/filteredImage.bmp");
@@ -109,6 +110,8 @@ public class VisionProcessing {
 
             if(filteredImage.getNumberParticles() > 0)
             {
+                
+                System.out.println("More than 0 particles!");
                     for (int i = 0; i < MAX_PARTICLES && i < filteredImage.getNumberParticles(); i++) {
                     ParticleAnalysisReport report = filteredImage.getParticleAnalysisReport(i);
                     scores[i] = new Scores();

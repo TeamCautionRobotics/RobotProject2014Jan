@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.smartdashboard.*;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO;
+import edu.wpi.first.wpilibj.camera.AxisCameraException;
 
 public class RobotMain extends SimpleRobot {
 
@@ -34,7 +35,7 @@ public class RobotMain extends SimpleRobot {
 
     public void robotInit() {
 
-        camera = AxisCamera.getInstance();
+        camera = AxisCamera.getInstance("10.14.92.11");
         
         visionProcessing = new VisionProcessing();
         visionProcessing.init(camera);
@@ -49,12 +50,21 @@ public class RobotMain extends SimpleRobot {
         fr = new Talon(4);
         compressor.start();
         chassis = new RobotDrive(fl, bl, fr, br);
+        chassis.setExpiration(2000);
         chassis.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);
         chassis.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
     }
 
     public void autonomous() {
-
+        visionProcessing.autonomous();
+        while(this.isAutonomous() && this.isEnabled()){
+            driveNowhere();
+            try {
+                visionProcessing.autonomousUpdate();
+            } catch (AxisCameraException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     public void operatorControl() {
@@ -140,6 +150,10 @@ public class RobotMain extends SimpleRobot {
 
     private double maxAt1(double n) {
         return n < -1 ? -1 : (n > 1 ? 1 : n);
+    }
+
+    private void driveNowhere() {
+        chassis.tankDrive(0, 0);
     }
 
 }
