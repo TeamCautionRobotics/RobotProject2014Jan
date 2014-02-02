@@ -10,8 +10,6 @@ import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.smartdashboard.*;
-import edu.wpi.first.wpilibj.camera.AxisCameraException;
-import edu.wpi.first.wpilibj.Watchdog;
 
 public class RobotMain extends SimpleRobot {
 
@@ -31,10 +29,10 @@ public class RobotMain extends SimpleRobot {
     private VisionProcessing visionProcessing;
 
     public RobotMain() {
+
     }
 
     public void robotInit() {
-
         camera = AxisCamera.getInstance("10.14.92.11");
 
         visionProcessing = new VisionProcessing();
@@ -60,7 +58,7 @@ public class RobotMain extends SimpleRobot {
         while (this.isAutonomous() && this.isEnabled()) {
             driveNowhere();
             visionProcessing.autonomousUpdate();
-            
+
             SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
         }
     }
@@ -87,14 +85,13 @@ public class RobotMain extends SimpleRobot {
             } else if (rightStick.getRawButton(2)) { //down
                 servoTest.setAngle(360);
             }
-
             Timer.delay(.01);
         }
 
     }
 
     public void disabled() {
-        
+
     }
 
     public void test() {
@@ -122,7 +119,6 @@ public class RobotMain extends SimpleRobot {
     }
 
     private void mecanumDrive(double x, double y, double r) {
-
         y = -y;
 
         double frn = 0;
