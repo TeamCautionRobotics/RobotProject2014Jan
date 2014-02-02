@@ -203,7 +203,7 @@ public class VisionProcessing {
             filteredImage.free();
             thresholdImage.free();
             image.free();
-
+            
         } catch (Exception ex) {
             ex.printStackTrace();
         }

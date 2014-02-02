@@ -59,6 +59,8 @@ public class RobotMain extends SimpleRobot {
         while(this.isAutonomous() && this.isEnabled()){
             driveNowhere();
             visionProcessing.autonomousUpdate();
+            
+            SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
         }
     }
 
