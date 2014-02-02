@@ -22,7 +22,6 @@ public class RobotMain extends SimpleRobot {
     AxisCamera camera;
     Servo servoTest;
     DriverStation driverStation;
-    Watchdog watchdogTimer;
 
     Talon fl;
     Talon bl;
@@ -35,8 +34,6 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void robotInit() {
-
-        watchdogTimer = Watchdog.getInstance();
 
         camera = AxisCamera.getInstance("10.14.92.11");
 
@@ -59,21 +56,16 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void autonomous() {
-        watchdogTimer.setExpiration(2);
-        watchdogTimer.setEnabled(true);
-        visionProcessing.autonomous();
+        visionProcessing.autonomousInit();
         while (this.isAutonomous() && this.isEnabled()) {
             driveNowhere();
             visionProcessing.autonomousUpdate();
             
             SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
         }
-        watchdogTimer.feed();
     }
 
     public void operatorControl() {
-        watchdogTimer.setExpiration(2);
-        watchdogTimer.setEnabled(true);
         chassis.setSafetyEnabled(false);
         SmartDashboard.putString("Alliance", driverStation.getAlliance().name);
         while (this.isOperatorControl() && this.isEnabled()) {
@@ -96,15 +88,13 @@ public class RobotMain extends SimpleRobot {
                 servoTest.setAngle(360);
             }
 
-            watchdogTimer.feed();
-
             Timer.delay(.01);
         }
 
     }
 
     public void disabled() {
-        watchdogTimer.setEnabled(false);
+        
     }
 
     public void test() {

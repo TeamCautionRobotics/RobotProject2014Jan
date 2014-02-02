@@ -83,7 +83,7 @@ public class VisionProcessing {
         cc.addCriteria(MeasurementType.IMAQ_MT_AREA, AREA_MINIMUM, 65535, false);
     }
 
-    public void autonomous() {
+    public void autonomousInit() {
 	target = new TargetReport();
 	verticalTargets = new int[MAX_PARTICLES];
 	horizontalTargets = new int[MAX_PARTICLES];
