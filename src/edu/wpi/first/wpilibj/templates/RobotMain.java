@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.smartdashboard.*;
 
 public class RobotMain extends SimpleRobot {
-
+    
     Compressor compressor = new Compressor(1, 1);
     RobotDrive chassis;
     Joystick leftStick = new Joystick(1);
@@ -20,28 +20,28 @@ public class RobotMain extends SimpleRobot {
     AxisCamera camera;
     Servo servoTest;
     DriverStation driverStation;
-
+    
     Talon fl;
     Talon bl;
     Talon fr;
     Talon br;
-
+    
     private VisionProcessing visionProcessing;
-
+    
     public RobotMain() {
-
+        
     }
-
+    
     public void robotInit() {
         camera = AxisCamera.getInstance("10.14.92.11");
-
+        
         visionProcessing = new VisionProcessing();
         visionProcessing.init(camera);
-
+        
         driverStation = DriverStation.getInstance();
-
+        
         servoTest = new Servo(5);
-
+        
         fl = new Talon(1);
         bl = new Talon(2);
         br = new Talon(3);
@@ -52,17 +52,17 @@ public class RobotMain extends SimpleRobot {
         chassis.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);
         chassis.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
     }
-
+    
     public void autonomous() {
         visionProcessing.autonomousInit();
         while (this.isAutonomous() && this.isEnabled()) {
             driveNowhere();
             visionProcessing.autonomousUpdate();
-
+            
             SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
         }
     }
-
+    
     public void operatorControl() {
         chassis.setSafetyEnabled(false);
         SmartDashboard.putString("Alliance", driverStation.getAlliance().name);
@@ -87,67 +87,74 @@ public class RobotMain extends SimpleRobot {
             }
             Timer.delay(.01);
         }
-
+        
     }
-
+    
     public void disabled() {
-
+        
     }
-
+    
     public void test() {
-
+        visionProcessing.autonomousInit();
+        visionProcessing.autonomousUpdate();
+        SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
+        
+        while (this.isTest() && this.isEnabled()) {
+            driveNowhere();
+            Timer.delay(0.1);
+        }
     }
-
+    
     private double getMecX() {
         return deadZone(rightStick.getAxis(Joystick.AxisType.kX));
     }
-
+    
     private double getMecY() {
         return deadZone(rightStick.getAxis(Joystick.AxisType.kY));
     }
-
+    
     private double getMecRot() {
         return deadZone(leftStick.getAxis(Joystick.AxisType.kX));
     }
-
+    
     private double deadZone(double value) {
         return (abs(value) < .1) ? 0 : value;
     }
-
+    
     private double abs(double value) {
         return value < 0 ? -value : value;
     }
-
+    
     private void mecanumDrive(double x, double y, double r) {
         y = -y;
-
+        
         double frn = 0;
         double fln = 0;
         double brn = 0;
         double bln = 0;
-
+        
         frn *= 1;
         fln *= 1;
         brn *= 1;
         bln *= 1;
-
+        
         fln = y + x + r;
         frn = y - x - r;
         bln = y - x + r;
         brn = y + x - r;
-
+        
         fr.set(-maxAt1(frn));
         fl.set(maxAt1(fln));
         br.set(-maxAt1(brn));
         bl.set(maxAt1(bln));
     }
-
+    
     private double maxAt1(double n) {
         return n < -1 ? -1 : (n > 1 ? 1 : n);
     }
-
+    
     private void driveNowhere() {
         chassis.tankDrive(0, 0);
     }
-
+    
 }
