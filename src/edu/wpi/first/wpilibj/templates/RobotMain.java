@@ -10,7 +10,6 @@ import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.smartdashboard.*;
-import edu.wpi.first.wpilibj.DriverStationEnhancedIO;
 import edu.wpi.first.wpilibj.camera.AxisCameraException;
 
 public class RobotMain extends SimpleRobot {
@@ -59,11 +58,7 @@ public class RobotMain extends SimpleRobot {
         visionProcessing.autonomous();
         while(this.isAutonomous() && this.isEnabled()){
             driveNowhere();
-            try {
-                visionProcessing.autonomousUpdate();
-            } catch (AxisCameraException ex) {
-                ex.printStackTrace();
-            }
+            visionProcessing.autonomousUpdate();
         }
     }
 
