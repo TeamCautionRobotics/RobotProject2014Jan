@@ -105,26 +105,23 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void test() {
-        //
-        // Shoulden't we use Autonomous?
-        //
-        /*
+        
         visionProcessing.autonomousInit();
         BinaryImage filteredImage;
 
         try {
-            filteredImage = visionProcessing.filterImageTest(camera.getImage());  // Also this should have been IN the loop. I think...
-            visionProcessing.autonomousUpdate(filteredImage); // Along whith this
+            filteredImage = visionProcessing.filterImageTest(camera.getImage());
+            visionProcessing.autonomousUpdate(filteredImage);
         } catch (AxisCameraException ex) {
         } catch (NIVisionException ex) {
         }
-        SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot); // And this
+        SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
 
         while (this.isTest() && this.isEnabled()) {
             driveNowhere();
             Timer.delay(0.1);
         }
-        */
+        
     }
 
     private double getMecX() {
