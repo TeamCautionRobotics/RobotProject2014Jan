@@ -51,7 +51,7 @@ public class RobotMain extends SimpleRobot {
         fr = new Talon(4);
         compressor.start();
         chassis = new RobotDrive(fl, bl, fr, br);
-        chassis.setExpiration(2000);
+        chassis.setExpiration(2);// since this is a double it's probrably seconds not miliseconds
         chassis.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);
         chassis.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
     }
@@ -66,16 +66,17 @@ public class RobotMain extends SimpleRobot {
             try {
                 filteredImage = visionProcessing.filterImage(camera.getImage());
                 visionProcessing.autonomousUpdate(filteredImage);
-            } catch (AxisCameraException ex) {
-            } catch (NIVisionException ex) {
+            } catch (Exception e) {
+                
             }
 
             SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
+            Timer.delay(.01);
         }
     }
 
     public void operatorControl() {
-        chassis.setSafetyEnabled(false);
+        chassis.setSafetyEnabled(true);
         SmartDashboard.putString("Alliance", driverStation.getAlliance().name);
         while (this.isOperatorControl() && this.isEnabled()) {
             SmartDashboard.putNumber("Mecanum X", getMecX());
@@ -85,8 +86,6 @@ public class RobotMain extends SimpleRobot {
             SmartDashboard.putNumber("Front Right", fr.getSpeed());
             SmartDashboard.putNumber("Back Left", bl.getSpeed());
             SmartDashboard.putNumber("Back Right", br.getSpeed());
-            //System.out.println("Axies: "+getMecX()+", "+getMecY()+", "+getMecRot());
-            //System.out.println("Drive: fl:"+fl.getSpeed()+" bl:"+bl.getSpeed()+" fr:"+fr.getSpeed()+" br:"+br.getSpeed());
 
             mecanumDrive(getMecX(), getMecY(), getMecRot());
             //chassis.mecanumDrive_Cartesian(getMecX(), getMecY(), getMecRot(), 0);
@@ -106,21 +105,26 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void test() {
+        //
+        // Shoulden't we use Autonomous?
+        //
+        /*
         visionProcessing.autonomousInit();
         BinaryImage filteredImage;
 
         try {
-            filteredImage = visionProcessing.filterImageTest(camera.getImage());
-            visionProcessing.autonomousUpdate(filteredImage);
+            filteredImage = visionProcessing.filterImageTest(camera.getImage());  // Also this should have been IN the loop. I think...
+            visionProcessing.autonomousUpdate(filteredImage); // Along whith this
         } catch (AxisCameraException ex) {
         } catch (NIVisionException ex) {
         }
-        SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
+        SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot); // And this
 
         while (this.isTest() && this.isEnabled()) {
             driveNowhere();
             Timer.delay(0.1);
         }
+        */
     }
 
     private double getMecX() {
