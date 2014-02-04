@@ -1,5 +1,7 @@
 package edu.wpi.first.wpilibj.templates;
 
+import com.sun.squawk.io.BufferedReader;
+import com.sun.squawk.microedition.io.FileConnection;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
@@ -13,6 +15,14 @@ import edu.wpi.first.wpilibj.camera.AxisCameraException;
 import edu.wpi.first.wpilibj.image.BinaryImage;
 import edu.wpi.first.wpilibj.image.NIVisionException;
 import edu.wpi.first.wpilibj.smartdashboard.*;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.Reader;
+import javax.microedition.io.Connector;
 
 public class RobotMain extends SimpleRobot {
 
@@ -110,6 +120,35 @@ public class RobotMain extends SimpleRobot {
 
             motorValues = trimValues(motorValues, scaleTrim, offsetTrim);   //scale and offset the motors
             driveMotors(motorValues);   //set the motors to the scaled and offset values
+            
+            if(SmartDashboard.getBoolean("Test file output", false)) {  //test writing to a file
+                DataOutputStream file;
+                FileConnection fc;
+                try {
+                    fc = (FileConnection)Connector.open("file:///test.txt", Connector.WRITE);
+                    fc.create();
+                    file = fc.openDataOutputStream();
+                    file.writeUTF(SmartDashboard.getString("Data to write to file"));
+                    file.flush();
+                    file.close();
+                    fc.close();
+                } catch (IOException ex) {
+                }
+            }
+            
+            if(SmartDashboard.getBoolean("Test file input", false)) {   //test reaing from a file
+                FileConnection fc;
+                BufferedReader reader;
+                try {
+                    fc = (FileConnection)Connector.open("file:///test.txt", Connector.READ);
+                    fc.create();
+                    reader = new BufferedReader((Reader) fc);
+                    String firstLine = reader.readLine();
+                    SmartDashboard.putString("First line of the file", firstLine);  //put the first line of the file on the SmartDashboard
+                    fc.close();
+                } catch (IOException ex) {
+                }
+            }
 
             if (rightStick.getRawButton(3)) { //up
                 servoTest.setAngle(-360);
