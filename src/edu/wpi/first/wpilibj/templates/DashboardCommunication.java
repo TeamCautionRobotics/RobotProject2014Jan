@@ -15,7 +15,13 @@ class DashboardCommunication {
 
     private RobotMain robot;
 
+    final int frontLeft = 0;
+    final int backLeft = 1;
+    final int backRight = 2;
+    final int frontRight = 3;
+
     public DashboardCommunication() {
+
     }
 
     DashboardCommunication(RobotMain r) {
@@ -28,7 +34,6 @@ class DashboardCommunication {
     }
 
     void drive() {
-
         System.out.println("Mecanum X" + robot.getMecX());
         System.out.println("Mecanum Y" + robot.getMecY());
         System.out.println("Mecanum Rotation" + robot.getMecRot());
@@ -36,7 +41,7 @@ class DashboardCommunication {
         System.out.println("Front Right" + robot.fr.getSpeed());
         System.out.println("Back Left" + robot.bl.getSpeed());
         System.out.println("Back Right" + robot.br.getSpeed());
-        
+
         SmartDashboard.putNumber("Mecanum X", robot.getMecX());   //put the different motor and joystick values on the dashboard for debugging
         SmartDashboard.putNumber("Mecanum Y", robot.getMecY());
         SmartDashboard.putNumber("Mecanum Rotation", robot.getMecRot());
@@ -46,4 +51,23 @@ class DashboardCommunication {
         SmartDashboard.putNumber("Back Right", robot.br.getSpeed());
     }
 
+    double[] getOffset() {
+        double[] offsetTrim = null;
+        offsetTrim[frontLeft] = SmartDashboard.getNumber("Front Left Offset", 0);  //get the offsets for the motors
+        offsetTrim[frontRight] = SmartDashboard.getNumber("Front Right Offset", 0);
+        offsetTrim[backLeft] = SmartDashboard.getNumber("Back Left Offset", 0);
+        offsetTrim[backRight] = SmartDashboard.getNumber("Back Right Offset", 0);
+
+        return offsetTrim;
+    }
+
+    double[] getScale() {
+        double[] scaleTrim = null;
+        scaleTrim[frontLeft] = SmartDashboard.getNumber("Front Left Scale", 1);    //get the scaling for the motors
+        scaleTrim[frontRight] = SmartDashboard.getNumber("Front Right Scale", 1);
+        scaleTrim[backLeft] = SmartDashboard.getNumber("Back Left Scale", 1);
+        scaleTrim[backRight] = SmartDashboard.getNumber("Back Right Scale", 1);
+
+        return scaleTrim;
+    }
 }

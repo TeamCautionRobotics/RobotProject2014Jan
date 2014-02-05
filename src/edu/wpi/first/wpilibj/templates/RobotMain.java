@@ -4,8 +4,9 @@ import com.sun.squawk.io.BufferedReader;
 import com.sun.squawk.microedition.io.FileConnection;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStationEnhancedIO;
+import edu.wpi.first.wpilibj.DriverStationEnhancedIO.*;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.SimpleRobot;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
@@ -23,8 +24,8 @@ public class RobotMain extends SimpleRobot {
     Joystick leftStick = new Joystick(1);
     Joystick rightStick = new Joystick(2);
     AxisCamera camera;
-    Servo servoTest;
     DriverStation driverStation;
+    DriverStationEnhancedIO driverStationIO;
 
     final int frontLeft = 0;
     final int backLeft = 1;
@@ -33,9 +34,9 @@ public class RobotMain extends SimpleRobot {
 
     double[] motorValues = new double[4];
     double[] offsetTrim = new double[]{0, 0, 0, 0};
-    double[] scaleTrim = new double[]{1, 1, -1, -1};
+    double[] scaleTrim = new double[]{1, 1, -1, -1};    //invert the two right motors so the robot drives correctly
 
-    Talon fl;
+    Talon fl;   //the motor drivers
     Talon bl;
     Talon fr;
     Talon br;
@@ -57,8 +58,8 @@ public class RobotMain extends SimpleRobot {
         dashboardCommunication = new DashboardCommunication(this);
 
         driverStation = DriverStation.getInstance();
-        
-        servoTest = new Servo(5);
+
+        driverStationIO = driverStation.getEnhancedIO();
 
         fl = new Talon(1);  //create the talons for each of the four wheels
         bl = new Talon(2);
@@ -76,21 +77,28 @@ public class RobotMain extends SimpleRobot {
         SmartDashboard.putString("Alliance", driverStation.getAlliance().name);
         while (this.isOperatorControl() && this.isEnabled()) {
             motorValues = mecanumDrive(getMecX(), getMecY(), getMecRot());
-            setTrims();
+
+            offsetTrim = dashboardCommunication.getOffset();
+            scaleTrim = dashboardCommunication.getScale();
+
             motorValues = trimValues(motorValues, scaleTrim, offsetTrim);   //scale and offset the motors
             driveMotors(motorValues);   //set the motors to the scaled and offset values
             dashboardCommunication.drive();
 
+            boolean[] driverStationIOState = null;
+            try {
+                for (int i = 1; i < 16; i++) {
+                    driverStationIOState[i] = driverStationIO.getDigital(i);
+                }
+
+            } catch (EnhancedIOException ex) {
+            }
+            SmartDashboard.putString("Driver Station IO", driverStationIOState.toString());
+
             readWriteToFile();
 
-            if (rightStick.getRawButton(3)) { //up
-                servoTest.setAngle(-360);
-            } else if (rightStick.getRawButton(2)) { //down
-                servoTest.setAngle(360);
-            }
             Timer.delay(0.01);  //do not run the loop to fast
         }
-
     }
 
     public void disabled() {
@@ -98,7 +106,6 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void test() {    //this method is called once when the robot is test mode
-
         visionProcessing.autonomousInit();
         BinaryImage filteredImage;
 
@@ -113,7 +120,6 @@ public class RobotMain extends SimpleRobot {
             driveNowhere();
             Timer.delay(0.1);
         }
-
     }
 
     public double getMecX() {  //get joystick values
@@ -139,9 +145,9 @@ public class RobotMain extends SimpleRobot {
     private double[] mecanumDrive(double x, double y, double r) {   // find the values for the motors based on x, y and rotation values
         y = -y;
 
-        double frn  = y + x + r;
-        double fln  = y - x - r;
-        double brn  = y - x + r;
+        double frn = y + x + r;
+        double fln = y - x - r;
+        double brn = y - x + r;
         double bln = y + x - r;
 
         double[] values = new double[4];
@@ -163,7 +169,6 @@ public class RobotMain extends SimpleRobot {
         for (int i = 0; i < 4; i++) {
             trimedValues[i] = orignalValues[i] + offset[i];
         }
-
         return trimedValues;
     }
 
@@ -185,20 +190,7 @@ public class RobotMain extends SimpleRobot {
         fr.set(0);
     }
 
-    private void setTrims() {
-        offsetTrim[frontLeft] = SmartDashboard.getNumber("Front Left Offset", 0);  //get the offsets for the motors
-        offsetTrim[frontRight] = SmartDashboard.getNumber("Front Right Offset", 0);
-        offsetTrim[backLeft] = SmartDashboard.getNumber("Back Left Offset", 0);
-        offsetTrim[backRight] = SmartDashboard.getNumber("Back Right Offset", 0);
-
-        scaleTrim[frontLeft] = SmartDashboard.getNumber("Front Left Scale", 1);    //get the scaling for the motors
-        scaleTrim[frontRight] = SmartDashboard.getNumber("Front Right Scale", 1);
-        scaleTrim[backLeft] = SmartDashboard.getNumber("Back Left Scale", 1);
-        scaleTrim[backRight] = SmartDashboard.getNumber("Back Right Scale", 1);
-    }
-
     private void readWriteToFile() {
-
         writeToFile = SmartDashboard.getBoolean("Test file output", false) && !writeToFile;
 
         if (writeToFile) {  //test writing to a file
@@ -232,5 +224,4 @@ public class RobotMain extends SimpleRobot {
             }
         }
     }
-
 }
