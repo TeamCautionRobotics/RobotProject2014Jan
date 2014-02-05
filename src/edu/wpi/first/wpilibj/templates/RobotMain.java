@@ -5,15 +5,12 @@ import com.sun.squawk.microedition.io.FileConnection;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.SimpleRobot;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
-import edu.wpi.first.wpilibj.camera.AxisCameraException;
 import edu.wpi.first.wpilibj.image.BinaryImage;
-import edu.wpi.first.wpilibj.image.NIVisionException;
 import edu.wpi.first.wpilibj.smartdashboard.*;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,7 +20,6 @@ import javax.microedition.io.Connector;
 public class RobotMain extends SimpleRobot {
 
     Compressor compressor = new Compressor(1, 1);
-    RobotDrive chassis;
     Joystick leftStick = new Joystick(1);
     Joystick rightStick = new Joystick(2);
     AxisCamera camera;
@@ -36,8 +32,8 @@ public class RobotMain extends SimpleRobot {
     final int frontRight = 3;
 
     double[] motorValues = new double[4];
-    double[] offsetTrim = new double[4];
-    double[] scaleTrim = new double[4];
+    double[] offsetTrim = new double[]{0, 0, 0, 0};
+    double[] scaleTrim = new double[]{1, 1, -1, -1};
 
     Talon fl;
     Talon bl;
@@ -45,6 +41,10 @@ public class RobotMain extends SimpleRobot {
     Talon br;
 
     private VisionProcessing visionProcessing;
+    private DashboardCommunication dashboardCommunication;
+
+    private boolean writeToFile = false;
+    private boolean readFromFile = false;
 
     public RobotMain() {
 
@@ -53,11 +53,11 @@ public class RobotMain extends SimpleRobot {
     public void robotInit() {
         camera = AxisCamera.getInstance("10.14.92.11");
 
-        visionProcessing = new VisionProcessing();
-        visionProcessing.init(camera);
+        visionProcessing = new VisionProcessing(camera);
+        dashboardCommunication = new DashboardCommunication(this);
 
         driverStation = DriverStation.getInstance();
-
+        
         servoTest = new Servo(5);
 
         fl = new Talon(1);  //create the talons for each of the four wheels
@@ -66,85 +66,22 @@ public class RobotMain extends SimpleRobot {
         fr = new Talon(4);
 
         compressor.start();
-        chassis = new RobotDrive(fl, bl, fr, br);   //create the chassis with the motor drivers
-        chassis.setExpiration(2);   // since this is a double it's probrably seconds not miliseconds
-        chassis.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);   //invert the two motors so the robot drives correctly
-        chassis.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
     }
 
     public void autonomous() {  //this method is called once when the robot is autonomous mode
-        visionProcessing.autonomousInit();
-        BinaryImage filteredImage;
 
-        while (this.isAutonomous() && this.isEnabled()) {
-            driveNowhere();
-
-            try {
-                filteredImage = visionProcessing.filterImage(camera.getImage());    //get an image and filter for vision targets
-                visionProcessing.autonomousUpdate(filteredImage);   //process the filtered image and look for any potential targets
-            } catch (Exception e) {
-            }
-
-            SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
-            Timer.delay(0.01);
-        }
     }
 
     public void operatorControl() { //this method is called once when the robot is teleoperated mode
-        chassis.setSafetyEnabled(true);
         SmartDashboard.putString("Alliance", driverStation.getAlliance().name);
         while (this.isOperatorControl() && this.isEnabled()) {
-            SmartDashboard.putNumber("Mecanum X", getMecX());   //put the different motor and joystick values on the dashboard for debugging
-            SmartDashboard.putNumber("Mecanum Y", getMecY());
-            SmartDashboard.putNumber("Mecanum Rotation", getMecRot());
-            SmartDashboard.putNumber("Front Left", fl.getSpeed());
-            SmartDashboard.putNumber("Front Right", fr.getSpeed());
-            SmartDashboard.putNumber("Back Left", bl.getSpeed());
-            SmartDashboard.putNumber("Back Right", br.getSpeed());
-            motorValues = mecanumDrive(getMecX(), getMecY(), getMecRot());  //
-            //chassis.mecanumDrive_Cartesian(getMecX(), getMecY(), getMecRot(), 0);
-
-            offsetTrim[frontLeft] = SmartDashboard.getNumber("Front Left Offset");  //get the offsets for the motors
-            offsetTrim[frontRight] = SmartDashboard.getNumber("Front Right Offset");
-            offsetTrim[backLeft] = SmartDashboard.getNumber("Back Left Offset");
-            offsetTrim[backRight] = SmartDashboard.getNumber("Back Right Offset");
-
-            scaleTrim[frontLeft] = SmartDashboard.getNumber("Front Left Scale");    //get the scaling for the motors
-            scaleTrim[frontRight] = SmartDashboard.getNumber("Front Right Scale");
-            scaleTrim[backLeft] = SmartDashboard.getNumber("Back Left Scale");
-            scaleTrim[backRight] = SmartDashboard.getNumber("Back Right Scale");
-
+            motorValues = mecanumDrive(getMecX(), getMecY(), getMecRot());
+            setTrims();
             motorValues = trimValues(motorValues, scaleTrim, offsetTrim);   //scale and offset the motors
             driveMotors(motorValues);   //set the motors to the scaled and offset values
+            dashboardCommunication.drive();
 
-            if (SmartDashboard.getBoolean("Test file output", false)) {  //test writing to a file
-                DataOutputStream file;
-                FileConnection fc;
-                try {
-                    fc = (FileConnection) Connector.open("file:///test.txt", Connector.WRITE);
-                    fc.create();
-                    file = fc.openDataOutputStream();
-                    file.writeUTF(SmartDashboard.getString("Data to write to file"));
-                    file.flush();
-                    file.close();
-                    fc.close();
-                } catch (IOException ex) {
-                }
-            }
-
-            if (SmartDashboard.getBoolean("Test file input", false)) {   //test reaing from a file
-                FileConnection fc;
-                BufferedReader reader;
-                try {
-                    fc = (FileConnection) Connector.open("file:///test.txt", Connector.READ);
-                    fc.create();
-                    reader = new BufferedReader((Reader) fc);
-                    String firstLine = reader.readLine();
-                    SmartDashboard.putString("First line of the file", firstLine);  //put the first line of the file on the SmartDashboard
-                    fc.close();
-                } catch (IOException ex) {
-                }
-            }
+            readWriteToFile();
 
             if (rightStick.getRawButton(3)) { //up
                 servoTest.setAngle(-360);
@@ -168,10 +105,9 @@ public class RobotMain extends SimpleRobot {
         try {
             filteredImage = visionProcessing.filterImageTest(camera.getImage());
             visionProcessing.autonomousUpdate(filteredImage);
-        } catch (AxisCameraException ex) {
-        } catch (NIVisionException ex) {
+        } catch (Exception ex) {
         }
-        SmartDashboard.putBoolean("Target Hot", visionProcessing.target.Hot);
+        dashboardCommunication.visionProcessing(visionProcessing);
 
         while (this.isTest() && this.isEnabled()) { //keep the robot from returning errors
             driveNowhere();
@@ -180,15 +116,15 @@ public class RobotMain extends SimpleRobot {
 
     }
 
-    private double getMecX() {  //get joystick values
+    public double getMecX() {  //get joystick values
         return deadZone(rightStick.getAxis(Joystick.AxisType.kX));
     }
 
-    private double getMecY() {  //get joystick values
+    public double getMecY() {  //get joystick values
         return deadZone(rightStick.getAxis(Joystick.AxisType.kY));
     }
 
-    private double getMecRot() {    //get joystick values
+    public double getMecRot() {    //get joystick values
         return deadZone(leftStick.getAxis(Joystick.AxisType.kX));
     }
 
@@ -203,15 +139,10 @@ public class RobotMain extends SimpleRobot {
     private double[] mecanumDrive(double x, double y, double r) {   // find the values for the motors based on x, y and rotation values
         y = -y;
 
-        double frn = 0;
-        double fln = 0;
-        double brn = 0;
-        double bln = 0;
-
-        fln = y + x + r;
-        frn = y - x - r;
-        bln = y - x + r;
-        brn = y + x - r;
+        double frn  = y + x + r;
+        double fln  = y - x - r;
+        double brn  = y - x + r;
+        double bln = y + x - r;
 
         double[] values = new double[4];
 
@@ -248,7 +179,58 @@ public class RobotMain extends SimpleRobot {
     }
 
     private void driveNowhere() {
-        chassis.tankDrive(0, 0);
+        fl.set(0);
+        bl.set(0);
+        br.set(0);
+        fr.set(0);
+    }
+
+    private void setTrims() {
+        offsetTrim[frontLeft] = SmartDashboard.getNumber("Front Left Offset", 0);  //get the offsets for the motors
+        offsetTrim[frontRight] = SmartDashboard.getNumber("Front Right Offset", 0);
+        offsetTrim[backLeft] = SmartDashboard.getNumber("Back Left Offset", 0);
+        offsetTrim[backRight] = SmartDashboard.getNumber("Back Right Offset", 0);
+
+        scaleTrim[frontLeft] = SmartDashboard.getNumber("Front Left Scale", 1);    //get the scaling for the motors
+        scaleTrim[frontRight] = SmartDashboard.getNumber("Front Right Scale", 1);
+        scaleTrim[backLeft] = SmartDashboard.getNumber("Back Left Scale", 1);
+        scaleTrim[backRight] = SmartDashboard.getNumber("Back Right Scale", 1);
+    }
+
+    private void readWriteToFile() {
+
+        writeToFile = SmartDashboard.getBoolean("Test file output", false) && !writeToFile;
+
+        if (writeToFile) {  //test writing to a file
+            DataOutputStream file;
+            FileConnection fc;
+            try {
+                fc = (FileConnection) Connector.open("file:///test.txt", Connector.WRITE);
+                fc.create();
+                file = fc.openDataOutputStream();
+                file.writeUTF(SmartDashboard.getString("Data to write to file"));
+                file.flush();
+                file.close();
+                fc.close();
+            } catch (IOException ex) {
+            }
+        }
+
+        readFromFile = SmartDashboard.getBoolean("Test file input", false) && !readFromFile;
+
+        if (readFromFile) {   //test reaing from a file
+            FileConnection fc;
+            BufferedReader reader;
+            try {
+                fc = (FileConnection) Connector.open("file:///test.txt", Connector.READ);
+                fc.create();
+                reader = new BufferedReader((Reader) fc);
+                String firstLine = reader.readLine();
+                SmartDashboard.putString("First line of the file", firstLine);  //put the first line of the file on the SmartDashboard
+                fc.close();
+            } catch (IOException ex) {
+            }
+        }
     }
 
 }

@@ -55,6 +55,12 @@ public class VisionProcessing {
     int verticalTargetCount, horizontalTargetCount;
     TargetReport target;
 
+    VisionProcessing(AxisCamera camera) {
+        this.camera = camera;
+        cc = new CriteriaCollection();      // create the criteria for the particle filter
+        cc.addCriteria(MeasurementType.IMAQ_MT_AREA, AREA_MINIMUM, 65535, false);
+    }
+
     public class Scores {
 
         double rectangularity;
@@ -73,12 +79,6 @@ public class VisionProcessing {
         double tapeWidthScore;
         double verticalScore;
     };
-
-    public void init(AxisCamera cam) {
-        camera = cam;
-        cc = new CriteriaCollection();      // create the criteria for the particle filter
-        cc.addCriteria(MeasurementType.IMAQ_MT_AREA, AREA_MINIMUM, 65535, false);
-    }
 
     public void autonomousInit() {
         target = new TargetReport();
