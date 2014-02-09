@@ -7,7 +7,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO.*;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.SimpleRobot;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
