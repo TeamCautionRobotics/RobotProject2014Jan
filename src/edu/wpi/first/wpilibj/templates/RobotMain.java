@@ -1,28 +1,34 @@
 package edu.wpi.first.wpilibj.templates;
 
-import com.sun.squawk.io.BufferedReader;
-import com.sun.squawk.microedition.io.FileConnection;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO.*;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.SimpleRobot;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.image.BinaryImage;
 import edu.wpi.first.wpilibj.smartdashboard.*;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.Reader;
-import javax.microedition.io.Connector;
 
 public class RobotMain extends SimpleRobot {
+    
+    
+    public static int ROTARY_ERROR = 0;
+    public static int ROTARY_LOAD = 1;
+    public static int ROTARY_LOW_GOAL = 2;
+    public static int ROTARY_TRUSS = 3;
+    public static int ROTARY_HIGH_GOAL = 4;
 
     Compressor compressor = new Compressor(1, 1);
     Joystick leftStick = new Joystick(1);
     Joystick rightStick = new Joystick(2);
+    Joystick manipulatorStick = new Joystick(3);
     AxisCamera camera;
     DriverStation driverStation;
     DriverStationEnhancedIO driverStationIO;
@@ -31,8 +37,18 @@ public class RobotMain extends SimpleRobot {
     Talon bl;
     Talon fr;
     Talon br;
+    
+    Talon pickupRoller;
+    
+    Solenoid trigger;
+    DoubleSolenoid pickupFrame;
+    DoubleSolenoid catapult;
 
     private VisionProcessing visionProcessing;
+    
+    private boolean triggerButtonDown = false;
+    private int pos = ROTARY_ERROR;
+    private int lastPos = ROTARY_ERROR;
 
     public RobotMain() {
 
@@ -44,13 +60,19 @@ public class RobotMain extends SimpleRobot {
         visionProcessing = new VisionProcessing(camera);
 
         driverStation = DriverStation.getInstance();
-
+        
         driverStationIO = driverStation.getEnhancedIO();
 
         fl = new Talon(1);  //create the talons for each of the four wheels
         bl = new Talon(2);
         br = new Talon(3);
         fr = new Talon(4);
+        
+        pickupRoller = new Talon(5);
+        
+        trigger = new Solenoid(0);
+        pickupFrame = new DoubleSolenoid(1, 2);
+        catapult = new DoubleSolenoid(1, 2);
 
         compressor.start();
     }
@@ -63,16 +85,54 @@ public class RobotMain extends SimpleRobot {
         SmartDashboard.putString("Alliance", driverStation.getAlliance().name);
         while (this.isOperatorControl() && this.isEnabled()) {
             mecanumDrive(getMecX(), getMecY(), getMecRot());
+            double v = deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY));
+            pickupRoller.set(v>0?1:v<0?-1:0);
 
-            boolean[] driverStationIOState = null;
+            pos = ROTARY_ERROR;
+            
             try {
-                for (int i = 1; i < 16; i++) {
-                    driverStationIOState[i] = driverStationIO.getDigital(i);
-                }
-
+                pos = driverStationIO.getDigital(6)?ROTARY_LOAD:
+                        driverStationIO.getDigital(8)?ROTARY_LOW_GOAL:
+                        driverStationIO.getDigital(10)?ROTARY_TRUSS:
+                        driverStationIO.getDigital(12)?ROTARY_HIGH_GOAL:
+                        ROTARY_ERROR;
             } catch (EnhancedIOException ex) {
             }
-            SmartDashboard.putString("Driver Station IO", driverStationIOState.toString());
+            if(lastPos!=pos){
+                if(pos == ROTARY_LOW_GOAL){
+                    catapult.set(Value.kReverse);
+                }else if(pos == ROTARY_TRUSS){
+                    catapult.set(Value.kReverse);
+                }else if(pos == ROTARY_HIGH_GOAL){
+                    catapult.set(Value.kForward);
+                }else{
+                    catapult.set(Value.kReverse);
+                    trigger.set(false);
+                }
+            }
+            lastPos = pos;
+            SmartDashboard.putNumber("Position", pos);
+            
+            boolean down = manipulatorStick.getRawButton(1);
+            boolean pressed = !triggerButtonDown && down;
+            boolean released = triggerButtonDown && !down;
+            
+            
+            if(pressed){
+                if(pos != ROTARY_LOAD){
+                    trigger.set(true);
+                }
+                new CatapultThread(pos, this).start();
+                
+            }
+            if(released){
+                if(pos != ROTARY_LOAD){
+                    trigger.set(false);
+                    catapult.set(Value.kReverse);
+                }
+            }
+            
+            triggerButtonDown = down;
 
             Timer.delay(0.01);  //do not run the loop to fast
         }
