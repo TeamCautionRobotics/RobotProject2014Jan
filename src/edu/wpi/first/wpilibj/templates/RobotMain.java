@@ -34,9 +34,6 @@ public class RobotMain extends SimpleRobot {
 
     private VisionProcessing visionProcessing;
 
-    private boolean writeToFile = false;
-    private boolean readFromFile = false;
-
     public RobotMain() {
 
     }
@@ -136,19 +133,6 @@ public class RobotMain extends SimpleRobot {
         br.set(maxAt1(brn));
         bl.set(maxAt1(bln));
         return values;
-    }
-
-    private double[] trimValues(double[] orignalValues, double[] scale, double[] offset) {  //apply offset and scaling to the values
-        double[] trimedValues = new double[4];
-
-        for (int i = 0; i < 4; i++) {
-            trimedValues[i] = orignalValues[i] * scale[i];
-        }
-
-        for (int i = 0; i < 4; i++) {
-            trimedValues[i] = orignalValues[i] + offset[i];
-        }
-        return trimedValues;
     }
 
     private double maxAt1(double n) {   //make the input value between 1 and -1
