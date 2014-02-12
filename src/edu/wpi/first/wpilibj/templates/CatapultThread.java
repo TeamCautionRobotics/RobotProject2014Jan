@@ -6,7 +6,7 @@
 
 package edu.wpi.first.wpilibj.templates;
 
-import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.Timer;
 
 /**
@@ -24,11 +24,11 @@ class CatapultThread extends Thread{
     public void run(){
         if(rot == RobotMain.ROTARY_LOW_GOAL || rot == RobotMain.ROTARY_TRUSS){
             Timer.delay(.1);
-            robot.catapult.set(DoubleSolenoid.Value.kForward);
+            robot.catapult.set(Relay.Value.kForward);
         }
         if(rot == RobotMain.ROTARY_LOW_GOAL){
             Timer.delay(.2);
-            robot.catapult.set(DoubleSolenoid.Value.kForward);
+            robot.catapult.set(Relay.Value.kForward);
         }
     }
     

@@ -2,13 +2,13 @@ package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO.*;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.Relay.Value;
 import edu.wpi.first.wpilibj.SimpleRobot;
-import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
@@ -39,9 +39,9 @@ public class RobotMain extends SimpleRobot {
     
     Talon pickupRoller;
     
-    Solenoid trigger;
-    DoubleSolenoid pickupFrame;
-    DoubleSolenoid catapult;
+    Relay trigger;
+    Relay pickupFrame;
+    Relay catapult;
 
     private VisionProcessing visionProcessing;
     
@@ -69,9 +69,9 @@ public class RobotMain extends SimpleRobot {
         
         pickupRoller = new Talon(5);
         
-        trigger = new Solenoid(0);
-        pickupFrame = new DoubleSolenoid(1, 2);
-        catapult = new DoubleSolenoid(1, 2);
+        trigger = new Relay(0);
+        pickupFrame = new Relay(1);
+        catapult = new Relay(2);
 
         compressor.start();
     }
@@ -82,6 +82,11 @@ public class RobotMain extends SimpleRobot {
 
     public void operatorControl() { //this method is called once when the robot is teleoperated mode
         SmartDashboard.putString("Alliance", driverStation.getAlliance().name);
+        
+        SmartDashboard.putString("Trigger Relay: ", ValueToString(trigger.get()));
+        SmartDashboard.putString("Pickup Frame Relay: ", ValueToString(pickupFrame.get()));
+        SmartDashboard.putString("Catapult Relay: ", ValueToString(catapult.get()));
+        
         while (this.isOperatorControl() && this.isEnabled()) {
             mecanumDrive(getMecX(), getMecY(), getMecRot());
             double v = deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY));
@@ -99,14 +104,14 @@ public class RobotMain extends SimpleRobot {
             }
             if(lastPos!=pos){
                 if(pos == ROTARY_LOW_GOAL){
-                    catapult.set(Value.kReverse);
+                    catapult.set(Relay.Value.kReverse);
                 }else if(pos == ROTARY_TRUSS){
-                    catapult.set(Value.kReverse);
+                    catapult.set(Relay.Value.kReverse);
                 }else if(pos == ROTARY_HIGH_GOAL){
-                    catapult.set(Value.kForward);
+                    catapult.set(Relay.Value.kForward);
                 }else{
-                    catapult.set(Value.kReverse);
-                    trigger.set(false);
+                    catapult.set(Relay.Value.kReverse);
+                    trigger.set(Relay.Value.kOff);
                 }
             }
             lastPos = pos;
@@ -119,15 +124,15 @@ public class RobotMain extends SimpleRobot {
             
             if(pressed){
                 if(pos != ROTARY_LOAD){
-                    trigger.set(true);
+                    trigger.set(Relay.Value.kForward);
                 }
                 new CatapultThread(pos, this).start();
                 
             }
             if(released){
                 if(pos != ROTARY_LOAD){
-                    trigger.set(false);
-                    catapult.set(Value.kReverse);
+                    trigger.set(Relay.Value.kOff);
+                    catapult.set(Relay.Value.kReverse);
                 }
             }
             
@@ -203,5 +208,15 @@ public class RobotMain extends SimpleRobot {
         bl.set(0);
         br.set(0);
         fr.set(0);
+    }
+
+    private String ValueToString(Value v) {
+        switch(v.value){
+            case 2 : return "Forward";
+            case 3 : return "Reverse";
+            case 1 : return "On";
+            case 0 : return "Off";
+        }
+        return "Error";
     }
 }
