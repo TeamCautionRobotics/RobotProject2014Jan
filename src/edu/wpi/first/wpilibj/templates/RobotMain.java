@@ -24,7 +24,7 @@ public class RobotMain extends SimpleRobot {
     public static int ROTARY_TRUSS = 3;
     public static int ROTARY_HIGH_GOAL = 4;
 
-    Compressor compressor = new Compressor(1, 1);
+    Compressor compressor;
     Joystick leftStick = new Joystick(1);
     Joystick rightStick = new Joystick(2);
     Joystick manipulatorStick = new Joystick(3);
@@ -69,9 +69,11 @@ public class RobotMain extends SimpleRobot {
         
         pickupRoller = new Talon(5);
         
-        trigger = new Relay(0);
-        pickupFrame = new Relay(1);
-        catapult = new Relay(2);
+        compressor = new Compressor(1, 2);
+        
+        trigger = new Relay(4);
+        pickupFrame = new Relay(3);
+        catapult = new Relay(1);
 
         compressor.start();
     }
