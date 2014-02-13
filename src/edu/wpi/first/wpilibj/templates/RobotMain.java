@@ -24,13 +24,12 @@ public class RobotMain extends SimpleRobot {
     public static int ROTARY_TRUSS = 3;
     public static int ROTARY_HIGH_GOAL = 4;
 
-    Compressor compressor;
+    Compressor compressor = new Compressor(1, 1);
     Joystick leftStick = new Joystick(1);
     Joystick rightStick = new Joystick(2);
     Joystick manipulatorStick = new Joystick(3);
     AxisCamera camera;
     DriverStation driverStation;
-    DriverStationEnhancedIO driverStationIO;
     
     Talon fl;   //the motor drivers
     Talon bl;
@@ -60,8 +59,6 @@ public class RobotMain extends SimpleRobot {
 
         driverStation = DriverStation.getInstance();
         
-        driverStationIO = driverStation.getEnhancedIO();
-
         fl = new Talon(1);  //create the talons for each of the four wheels
         bl = new Talon(2);
         br = new Talon(3);
@@ -69,12 +66,10 @@ public class RobotMain extends SimpleRobot {
         
         pickupRoller = new Talon(5);
         
-        compressor = new Compressor(1, 2);
-        
         trigger = new Relay(4);
         pickupFrame = new Relay(3);
-        catapult = new Relay(1);
-
+        catapult = new Relay(2);
+        
         compressor.start();
     }
 
@@ -88,6 +83,7 @@ public class RobotMain extends SimpleRobot {
         SmartDashboard.putString("Trigger Relay: ", ValueToString(trigger.get()));
         SmartDashboard.putString("Pickup Frame Relay: ", ValueToString(pickupFrame.get()));
         SmartDashboard.putString("Catapult Relay: ", ValueToString(catapult.get()));
+        SmartDashboard.putBoolean("Compressor Enabled", compressor.enabled());
         
         while (this.isOperatorControl() && this.isEnabled()) {
             mecanumDrive(getMecX(), getMecY(), getMecRot());
@@ -96,14 +92,20 @@ public class RobotMain extends SimpleRobot {
 
             pos = ROTARY_ERROR;
             
-            try {
-                pos = driverStationIO.getDigital(6)?ROTARY_LOAD:
-                        driverStationIO.getDigital(8)?ROTARY_LOW_GOAL:
-                        driverStationIO.getDigital(10)?ROTARY_TRUSS:
-                        driverStationIO.getDigital(12)?ROTARY_HIGH_GOAL:
-                        ROTARY_ERROR;
-            } catch (EnhancedIOException ex) {
+            SmartDashboard.putNumber("test", 0);
+            
+           SmartDashboard.putBoolean("tester", driverStation.getDigitalIn(12));
+            
+            if(!driverStation.getDigitalIn(6)){
+                pos = ROTARY_LOAD;SmartDashboard.putNumber("test", 6);
+            }else if(!driverStation.getDigitalIn(8)){
+                pos = ROTARY_LOW_GOAL;SmartDashboard.putNumber("test", 8);
+            }else if(!driverStation.getDigitalIn(10)){
+                pos = ROTARY_HIGH_GOAL;SmartDashboard.putNumber("test", 10);
+            }else if(!driverStation.getDigitalIn(12)){
+                pos = ROTARY_TRUSS;SmartDashboard.putNumber("test", 12);
             }
+            
             if(lastPos!=pos){
                 if(pos == ROTARY_LOW_GOAL){
                     catapult.set(Relay.Value.kReverse);
