@@ -1,9 +1,7 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStationEnhancedIO;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO.*;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Relay;
@@ -11,14 +9,11 @@ import edu.wpi.first.wpilibj.Relay.Value;
 import edu.wpi.first.wpilibj.SimpleRobot;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.camera.AxisCamera;
-import edu.wpi.first.wpilibj.image.BinaryImage;
 import edu.wpi.first.wpilibj.smartdashboard.*;
 
 public class RobotMain extends SimpleRobot {
     
     
-    public static int ROTARY_ERROR = 0;
     public static int ROTARY_LOAD = 1;
     public static int ROTARY_LOW_GOAL = 2;
     public static int ROTARY_TRUSS = 3;
@@ -28,7 +23,7 @@ public class RobotMain extends SimpleRobot {
     Joystick leftStick = new Joystick(1);
     Joystick rightStick = new Joystick(2);
     Joystick manipulatorStick = new Joystick(3);
-    AxisCamera camera;
+    //AxisCamera camera;
     DriverStation driverStation;
     
     Talon fl;   //the motor drivers
@@ -42,25 +37,25 @@ public class RobotMain extends SimpleRobot {
     Relay pickupFrame;
     Relay catapult;
 
-    private VisionProcessing visionProcessing;
+    //private VisionProcessing visionProcessing;
     
     private boolean triggerButtonDown = false;
-    private int pos = ROTARY_ERROR;
-    private int lastPos = ROTARY_ERROR;
+    private int pos = ROTARY_LOAD;
+    private int lastPos = ROTARY_LOAD;
 
     public RobotMain() {
 
     }
 
     public void robotInit() {
-        camera = AxisCamera.getInstance("10.14.92.11");
-
-        visionProcessing = new VisionProcessing(camera);
+        //camera = AxisCamera.getInstance("10.14.92.11");
+        //REMOVED CAMERA
+        //visionProcessing = new VisionProcessing(camera);
 
         driverStation = DriverStation.getInstance();
         
-        fl = new Talon(1);  //create the talons for each of the four wheels
-        bl = new Talon(2);
+        fl = new Talon(2);  //create the talons for each of the four wheels
+        bl = new Talon(1);
         br = new Talon(3);
         fr = new Talon(4);
         
@@ -74,7 +69,16 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void autonomous() {  //this method is called once when the robot is autonomous mode
-
+        catapult.set(Relay.Value.kForward);
+        pickupFrame.set(Value.kReverse);
+        Timer.delay(.2);
+        trigger.set(Relay.Value.kForward);
+        new CatapultThread(ROTARY_TRUSS, this).start();
+        moveAll(1);
+        Timer.delay(.2);
+        moveAll(0);
+        trigger.set(Relay.Value.kOff);
+        catapult.set(Relay.Value.kReverse);
     }
 
     public void operatorControl() { //this method is called once when the robot is teleoperated mode
@@ -85,25 +89,40 @@ public class RobotMain extends SimpleRobot {
         SmartDashboard.putString("Catapult Relay: ", ValueToString(catapult.get()));
         SmartDashboard.putBoolean("Compressor Enabled", compressor.enabled());
         
+        pickupFrame.set(Value.kForward);
+        
         while (this.isOperatorControl() && this.isEnabled()) {
             mecanumDrive(getMecX(), getMecY(), getMecRot());
-            double v = deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY));
-            pickupRoller.set(v>0?1:v<0?-1:0);
+            double v = deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY), .5);
+            pickupRoller.set(v>0?-1:v<0?1:0);
+            
+            if(manipulatorStick.getRawButton(3)){//up
+                pickupFrame.set(Value.kForward);
+            }else if(manipulatorStick.getRawButton(2)){//down
+                pickupFrame.set(Value.kReverse);
+            }
 
-            pos = ROTARY_ERROR;
+            pos = ROTARY_LOAD;
             
-            SmartDashboard.putNumber("test", 0);
+            SmartDashboard.putNumber("rot dio", 0);
             
-           SmartDashboard.putBoolean("tester", driverStation.getDigitalIn(12));
+            SmartDashboard.putBoolean("is 1 (Off)", !driverStation.getDigitalIn(1));
+            SmartDashboard.putBoolean("is 2 (Low)", !driverStation.getDigitalIn(2));
+            SmartDashboard.putBoolean("is 3 (High)", !driverStation.getDigitalIn(3));
+            SmartDashboard.putBoolean("is 4 (Truss)", !driverStation.getDigitalIn(4));
             
-            if(!driverStation.getDigitalIn(6)){
-                pos = ROTARY_LOAD;SmartDashboard.putNumber("test", 6);
-            }else if(!driverStation.getDigitalIn(8)){
-                pos = ROTARY_LOW_GOAL;SmartDashboard.putNumber("test", 8);
-            }else if(!driverStation.getDigitalIn(10)){
-                pos = ROTARY_HIGH_GOAL;SmartDashboard.putNumber("test", 10);
-            }else if(!driverStation.getDigitalIn(12)){
-                pos = ROTARY_TRUSS;SmartDashboard.putNumber("test", 12);
+            try{
+                if(!driverStation.getDigitalIn(1)){
+                    pos = ROTARY_LOAD;SmartDashboard.putNumber("rot dio", 1);
+                }else if(!driverStation.getDigitalIn(2)){
+                    pos = ROTARY_LOW_GOAL;SmartDashboard.putNumber("rot dio", 2);
+                }else if(!driverStation.getDigitalIn(3)){
+                    pos = ROTARY_HIGH_GOAL;SmartDashboard.putNumber("rot dio", 3);
+                }else if(!driverStation.getDigitalIn(4)){
+                    pos = ROTARY_TRUSS;SmartDashboard.putNumber("rot dio", 4);
+                }
+            }catch(Exception e){
+                SmartDashboard.putString("Error: ", e.getMessage());
             }
             
             if(lastPos!=pos){
@@ -128,9 +147,10 @@ public class RobotMain extends SimpleRobot {
             
             if(pressed){
                 if(pos != ROTARY_LOAD){
+                    pickupFrame.set(Value.kReverse);//safty
                     trigger.set(Relay.Value.kForward);
+                    new CatapultThread(pos, this).start();
                 }
-                new CatapultThread(pos, this).start();
                 
             }
             if(released){
@@ -147,11 +167,11 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void disabled() {
-
+        
     }
 
     public void test() {    //this method is called once when the robot is test mode
-        visionProcessing.autonomousInit();
+        /*visionProcessing.autonomousInit();
         BinaryImage filteredImage;
 
         try {
@@ -163,7 +183,7 @@ public class RobotMain extends SimpleRobot {
         while (this.isTest() && this.isEnabled()) { //keep the robot from returning errors
             driveNowhere();
             Timer.delay(0.1);
-        }
+        }*/ 
     }
 
     public double getMecX() {  //get joystick values
@@ -178,8 +198,12 @@ public class RobotMain extends SimpleRobot {
         return deadZone(leftStick.getAxis(Joystick.AxisType.kX));
     }
 
-    private double deadZone(double value) { //apply a dead zone to a value
-        return (abs(value) < .1) ? 0 : value;
+    private double deadZone(double value, double amount) { //apply a dead zone to a value
+        return (abs(value) < amount) ? 0 : value;
+    }
+
+    private double deadZone(double value) {
+        return deadZone(value, .2);
     }
 
     private double abs(double value) {  //absoulte value
@@ -187,8 +211,10 @@ public class RobotMain extends SimpleRobot {
     }
 
     private double[] mecanumDrive(double x, double y, double r) {   // find the values for the motors based on x, y and rotation values
+        x = -x;
         y = -y;
-
+        r = -r;
+        
         double frn = y + x + r;
         double fln = y - x - r;
         double brn = y - x + r;
@@ -196,22 +222,12 @@ public class RobotMain extends SimpleRobot {
 
         double[] values = new double[4];
 
-        fr.set(maxAt1(frn));
-        fl.set(maxAt1(fln));
-        br.set(maxAt1(brn));
-        bl.set(maxAt1(bln));
+        move(fln, frn, bln, brn);
         return values;
     }
 
     private double maxAt1(double n) {   //make the input value between 1 and -1
         return n < -1 ? -1 : (n > 1 ? 1 : n);
-    }
-
-    private void driveNowhere() {
-        fl.set(0);
-        bl.set(0);
-        br.set(0);
-        fr.set(0);
     }
 
     private String ValueToString(Value v) {
@@ -222,5 +238,16 @@ public class RobotMain extends SimpleRobot {
             case 0 : return "Off";
         }
         return "Error";
+    }
+
+    private void moveAll(double i) {
+        move(i, i, i, i);
+    }
+
+    private void move(double flv, double frv, double blv, double brv) {
+        fr.set(-maxAt1(frv));
+        fl.set(maxAt1(flv));
+        br.set(-maxAt1(brv));
+        bl.set(maxAt1(blv));
     }
 }
