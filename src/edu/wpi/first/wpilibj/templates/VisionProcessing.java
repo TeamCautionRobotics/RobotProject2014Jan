@@ -209,7 +209,7 @@ public class VisionProcessing {
          *
          */
         image.write("/orignalImage.bmp");
-        BinaryImage thresholdImage = image.thresholdHSV(0, 255, 0, 255, 133, 183);   // keep only green objects
+        BinaryImage thresholdImage = image.image.thresholdHSV(50, 70, 90, 110, 90, 110);   // keep only green objects
         thresholdImage.write("/threshold.bmp");
         BinaryImage filteredImage = thresholdImage.particleFilter(cc);           // filter out small particles
         filteredImage.write("/filteredImage.bmp");
