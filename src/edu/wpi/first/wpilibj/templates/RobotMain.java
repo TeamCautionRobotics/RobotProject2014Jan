@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.image.BinaryImage;
-import edu.wpi.first.wpilibj.smartdashboard.*;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class RobotMain extends SimpleRobot {
 
@@ -27,7 +27,7 @@ public class RobotMain extends SimpleRobot {
     AxisCamera camera;  //Create the camera
     DriverStation driverStation;    //Create the driver station
 
-    Talon fl;   //the motor drivers
+    Talon fl;   //The motor drivers
     Talon bl;
     Talon fr;
     Talon br;
@@ -69,7 +69,7 @@ public class RobotMain extends SimpleRobot {
         compressor.start(); //Start the compressor
     }
 
-    public void autonomous() {  //this method is called once when the robot is autonomous mode
+    public void autonomous() {  //This method is called once when the robot is autonomous mode
         catapult.set(Relay.Value.kForward); //Pre-charge the catapult
         pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
         Timer.delay(.2);    //Wait
@@ -82,15 +82,14 @@ public class RobotMain extends SimpleRobot {
         catapult.set(Relay.Value.kReverse); //Pull the catapult back down
     }
 
-    public void operatorControl() { //this method is called once when the robot is teleoperated mode
+    public void operatorControl() { //This method is called once when the robot is teleoperated mode
         SmartDashboard.putString("Alliance", driverStation.getAlliance().name); //Put the data to smart dashboard only once
-
         SmartDashboard.putString("Trigger Relay: ", ValueToString(trigger.get()));
         SmartDashboard.putString("Pickup Frame Relay: ", ValueToString(pickupFrame.get()));
         SmartDashboard.putString("Catapult Relay: ", ValueToString(catapult.get()));
         SmartDashboard.putBoolean("Compressor Enabled", compressor.enabled());
 
-        pickupFrame.set(Value.kForward);    //pull the frame in
+        pickupFrame.set(Value.kForward);    //Pull the frame in
 
         while (this.isOperatorControl() && this.isEnabled()) {  //Everything in here happens forever
             mecanumDrive(getMecX(), getMecY(), getMecRot());    //Drive the robot
@@ -139,34 +138,35 @@ public class RobotMain extends SimpleRobot {
                     catapult.set(Relay.Value.kForward); //Pre-charge the catapult
                 } else {    //If in the ROTARY_LOAD mode or somethign has gone horribly wrong
                     catapult.set(Relay.Value.kReverse); //Switch the catapult off
-                    trigger.set(Relay.Value.kOff); 
+                    trigger.set(Relay.Value.kOff);
                 }
             }
-            lastPos = pos;
-            SmartDashboard.putNumber("Position", pos);
 
-            boolean down = manipulatorStick.getRawButton(1);
-            boolean pressed = !triggerButtonDown && down;
-            boolean released = triggerButtonDown && !down;
+            lastPos = pos;  //Reset the previous position of the knob
+            SmartDashboard.putNumber("Position", pos);  //Update the position of the knob
+
+            boolean down = manipulatorStick.getRawButton(1);    //Is the trigger button pressed
+            boolean pressed = !triggerButtonDown && down;   //Has the trigger button gone from up to down
+            boolean released = triggerButtonDown && !down;  //has the trigger button gone from up to down
 
             if (pressed) {
-                if (pos != ROTARY_LOAD) {
-                    pickupFrame.set(Value.kReverse);    //safty
-                    trigger.set(Relay.Value.kForward);
-                    new CatapultThread(pos, this).start();
+                if (pos != ROTARY_LOAD) {   //If we should be able to shoot
+                    pickupFrame.set(Value.kReverse);    //Do not shoot with the frame in the way
+                    trigger.set(Relay.Value.kForward);  //Engauge the trigger
+                    new CatapultThread(pos, this).start();  //Do the necessary catapult stuff
                 }
-
             }
+            
             if (released) {
-                if (pos != ROTARY_LOAD) {
-                    trigger.set(Relay.Value.kOff);
-                    catapult.set(Relay.Value.kReverse);
+                if (pos != ROTARY_LOAD) {   //If we are done shooting
+                    trigger.set(Relay.Value.kOff);  //Latch the trigger
+                    catapult.set(Relay.Value.kReverse); //Pull the catapult down
                 }
             }
 
-            triggerButtonDown = down;
+            triggerButtonDown = down;   //Update the trigger button state
 
-            Timer.delay(0.01);  //do not run the loop to fast
+            Timer.delay(0.01);  //Do not run the loop to fast
         }
     }
 
@@ -174,7 +174,7 @@ public class RobotMain extends SimpleRobot {
 
     }
 
-    public void test() {    //this method is called once when the robot is test mode
+    public void test() {    //This method is called once when the robot is test mode
         visionProcessing.autonomousInit();
         BinaryImage filteredImage;
 
@@ -182,27 +182,28 @@ public class RobotMain extends SimpleRobot {
             filteredImage = visionProcessing.filterImageTest(camera.getImage());
             visionProcessing.autonomousUpdate(filteredImage);
         } catch (Exception ex) {
+            SmartDashboard.putString("Error: ", ex.getMessage());
         }
 
-        while (this.isTest() && this.isEnabled()) { //keep the robot from returning errors
+        while (this.isTest() && this.isEnabled()) { //Keep the robot from returning errors
             moveAll(0);
             Timer.delay(0.1);
         }
     }
 
-    public double getMecX() {  //get joystick values
+    public double getMecX() {   //Get joystick values
         return deadZone(rightStick.getAxis(Joystick.AxisType.kX));
     }
 
-    public double getMecY() {  //get joystick values
+    public double getMecY() {   //Get joystick values
         return deadZone(rightStick.getAxis(Joystick.AxisType.kY));
     }
 
-    public double getMecRot() {    //get joystick values
+    public double getMecRot() { //Get joystick values
         return deadZone(leftStick.getAxis(Joystick.AxisType.kX));
     }
 
-    private double deadZone(double value, double amount) { //apply a dead zone to a value
+    private double deadZone(double value, double amount) {  //Apply a dead zone to a value
         return (abs(value) < amount) ? 0 : value;
     }
 
@@ -210,11 +211,11 @@ public class RobotMain extends SimpleRobot {
         return deadZone(value, .2);
     }
 
-    private double abs(double value) {  //absoulte value
+    private double abs(double value) {  //Absoulte value
         return value < 0 ? -value : value;
     }
 
-    private double[] mecanumDrive(double x, double y, double r) {   // find the values for the motors based on x, y and rotation values
+    private double[] mecanumDrive(double x, double y, double r) {   //Find the values for the motors based on x, y and rotation values
         x = -x;
         y = -y;
         r = -r;
@@ -230,7 +231,7 @@ public class RobotMain extends SimpleRobot {
         return values;
     }
 
-    private double maxAt1(double n) {   //make the input value between 1 and -1
+    private double maxAt1(double n) {   //Make the input value between 1 and -1
         return n < -1 ? -1 : (n > 1 ? 1 : n);
     }
 
