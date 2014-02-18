@@ -24,7 +24,7 @@ import edu.wpi.first.wpilibj.image.NIVision.MeasurementType;
  * sample images.
  */
 public class VisionProcessing {
-    
+
     //Target color thresholds
     final int minHue = 50;
     final int maxHue = 60;
@@ -32,7 +32,7 @@ public class VisionProcessing {
     final int maxSat = 255;
     final int minVal = 204;
     final int maxVal = 255;
-    
+
     //Camera constants used for distance calculation
     final int Y_IMAGE_RES = 480;		//X Image resolution in pixels, should be 120, 240 or 480
     final double VIEW_ANGLE = 49;		//Axis M1013
@@ -55,7 +55,6 @@ public class VisionProcessing {
     //Maximum number of particles to process
     final int MAX_PARTICLES = 8;
 
-    AxisCamera camera;          // the axis camera object (connected to the switch)
     CriteriaCollection cc;      // the criteria for doing the particle filter operation
 
     int verticalTargets[];
@@ -63,8 +62,7 @@ public class VisionProcessing {
     int verticalTargetCount, horizontalTargetCount;
     TargetReport target;
 
-    VisionProcessing(AxisCamera camera) {
-        this.camera = camera;
+    VisionProcessing() {
         cc = new CriteriaCollection();      // create the criteria for the particle filter
         cc.addCriteria(MeasurementType.IMAQ_MT_AREA, AREA_MINIMUM, 65535, false);
     }
