@@ -30,11 +30,11 @@ import edu.wpi.first.wpilibj.image.ParticleAnalysisReport;
 public class VisionProcessing {
 
     //Target color thresholds
-    final int minHue = 50;
-    final int maxHue = 60;
-    final int minSat = 165;
+    final int minHue = 45;
+    final int maxHue = 65;
+    final int minSat = 160;
     final int maxSat = 255;
-    final int minVal = 204;
+    final int minVal = 180;
     final int maxVal = 255;
 
     //Camera constants used for distance calculation

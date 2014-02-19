@@ -72,11 +72,10 @@ public class RobotMain extends SimpleRobot {
     public void autonomous() {  //This method is called once when the robot is autonomous mode
         catapult.set(Relay.Value.kForward); //Pre-charge the catapult
         pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
-        Timer.delay(.2);    //Wait
+        Timer.delay(1);    //Wait
         trigger.set(Relay.Value.kForward);  //Engauge the trigger
-        new CatapultThread(ROTARY_TRUSS, this).start(); //Have another thread do the delays
         moveAll(1); //Move forward for the mobility points
-        Timer.delay(.2);    //Wait
+        Timer.delay(1);    //Wait
         moveAll(0); //Stop so we do not crash into the wall
         trigger.set(Relay.Value.kOff);  //Latch the trigger
         catapult.set(Relay.Value.kReverse); //Pull the catapult back down
