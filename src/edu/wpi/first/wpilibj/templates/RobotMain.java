@@ -70,15 +70,41 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void autonomous() {  //This method is called once when the robot is autonomous mode
-        catapult.set(Relay.Value.kForward); //Pre-charge the catapult
-        pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
-        Timer.delay(1);    //Wait
-        trigger.set(Relay.Value.kForward);  //Engauge the trigger
-        moveAll(1); //Move forward for the mobility points
-        Timer.delay(1);    //Wait
-        moveAll(0); //Stop so we do not crash into the wall
-        trigger.set(Relay.Value.kOff);  //Latch the trigger
-        catapult.set(Relay.Value.kReverse); //Pull the catapult back down
+        int state = 2;
+        
+        if(state == 1 || state == 2){
+            catapult.set(Relay.Value.kForward); //Pre-charge the catapult
+            pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
+            Timer.delay(1);    //Wait
+            trigger.set(Relay.Value.kForward);  //Engauge the trigger
+            Timer.delay(1);    //Wait
+            trigger.set(Relay.Value.kOff);  //Latch the trigger
+            catapult.set(Relay.Value.kReverse); //Pull the catapult back down
+        }
+        if(state==2){
+            Timer.delay(1);
+            pickupFrame.set(Value.kForward);
+            pickupRoller.set(1);
+            Timer.delay(2);    //Wait
+            pickupRoller.set(0);
+            pickupFrame.set(Value.kReverse);
+            Timer.delay(1);
+            
+            
+            catapult.set(Relay.Value.kForward); //Pre-charge the catapult
+            pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
+            Timer.delay(1);    //Wait
+            trigger.set(Relay.Value.kForward);  //Engauge the trigger
+            Timer.delay(1);    //Wait
+            trigger.set(Relay.Value.kOff);  //Latch the trigger
+            catapult.set(Relay.Value.kReverse); //Pull the catapult back down
+        }
+        if(state==1 || state==2){
+            moveAll(1); //Move forward for the mobility points
+            Timer.delay(.5);    //Wait
+            moveAll(0); //Stop so we do not crash into the wall
+        }
+        
     }
 
     public void operatorControl() { //This method is called once when the robot is teleoperated mode
