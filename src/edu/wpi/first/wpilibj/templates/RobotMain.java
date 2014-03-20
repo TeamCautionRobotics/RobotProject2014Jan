@@ -177,6 +177,7 @@ public class RobotMain extends SimpleRobot {
             if (pressed) {
                 if (pos != ROTARY_LOAD) {   //If we should be able to shoot
                     pickupFrame.set(Value.kReverse);    //Do not shoot with the frame in the way
+                    Timer.delay(.2);
                     trigger.set(Relay.Value.kForward);  //Engauge the trigger
                     new CatapultThread(pos, this).start();  //Do the necessary catapult stuff
                 }
@@ -186,6 +187,8 @@ public class RobotMain extends SimpleRobot {
                 if (pos != ROTARY_LOAD) {   //If we are done shooting
                     trigger.set(Relay.Value.kOff);  //Latch the trigger
                     catapult.set(Relay.Value.kReverse); //Pull the catapult down
+                    Timer.delay(.2);
+                    pickupFrame.set(Value.kForward);
                 }
             }
 
