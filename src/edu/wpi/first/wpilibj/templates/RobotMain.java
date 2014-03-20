@@ -70,7 +70,7 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void autonomous() {  //This method is called once when the robot is autonomous mode
-        int state = 2;
+        int state = 1;      //1 is single shoot, 2 is double
         
         if(state == 1 || state == 2){
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
@@ -84,7 +84,7 @@ public class RobotMain extends SimpleRobot {
         if(state==2){
             Timer.delay(1);
             pickupFrame.set(Value.kForward);
-            pickupRoller.set(1);
+            pickupRoller.set(-1);
             Timer.delay(2);    //Wait
             pickupRoller.set(0);
             pickupFrame.set(Value.kReverse);
