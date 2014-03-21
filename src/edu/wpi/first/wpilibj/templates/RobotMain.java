@@ -142,7 +142,7 @@ public class RobotMain extends SimpleRobot {
         while (this.isOperatorControl() && this.isEnabled()) {  //Everything in here happens forever
             mecanumDrive(getMecX(), getMecY(), getMecRot());    //Drive the robot
             double v = deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY), .5);    //Should the pickup rollers do anything
-            pickupRoller.set(v > 0.3 ? -1 : v < -0.3 ? 1 : 0);
+            pickupRoller.set(v > 0.3 ? Math.max((-v)*2.0, -1.0) : v < -0.3 ? 1 : 0); // -in +out
             SmartDashboard.putNumber("Pickup roller motor", (v > 0.3 ? -1 : v < -0.3 ? 1 : 0));
             SmartDashboard.putNumber("Pickup roller joystick", v);
 
