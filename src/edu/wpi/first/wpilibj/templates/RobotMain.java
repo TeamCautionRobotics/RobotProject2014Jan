@@ -27,9 +27,6 @@ public class RobotMain extends SimpleRobot {
     Joystick manipulatorStick = new Joystick(3);    //Joystick for the manipulator
     AxisCamera camera;  //Create the camera
     DriverStation driverStation;    //Create the driver station
-    
-    DigitalInput diA;
-    DigitalInput diB;
 
     Talon fl;   //The motor drivers
     Talon bl;
@@ -60,8 +57,6 @@ public class RobotMain extends SimpleRobot {
 
         driverStation = DriverStation.getInstance();    //Initalize the driver station
         
-        diA = new DigitalInput(13);
-        diB = new DigitalInput(14);
 
         fl = new Talon(2);  //Initalize the talons for each of the four wheels
         bl = new Talon(1);
@@ -78,24 +73,12 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void autonomous() {  //This method is called once when the robot is autonomous mode
-        int state = 1;
+        int state;
         
-        //Not connected yet
-        boolean a = true;// = diA.get();
-        boolean b = false;// = diB.get();
-        
-        if(a){
-            if(b){
-                state = 2; // 11 - double shoot then move
-            }else{
-                state = 1; // 10 - Shoot then move
-            }
+        if(driverStation.getDigitalIn(6)){
+            state = 2; // 11 - double shoot then move
         }else{
-            if(b){
-                state = 3; // 01 - Just move
-            }else{
-                state = 0; // 00 - Nothing
-            }
+            state = 1; // 10 - Shoot then move
         }
 
         if (state == 1 || state == 2) {
@@ -144,7 +127,7 @@ public class RobotMain extends SimpleRobot {
         while (this.isOperatorControl() && this.isEnabled()) {  //Everything in here happens forever
             mecanumDrive(getMecX(), getMecY(), getMecRot());    //Drive the robot
             double v = deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY), .5);    //Should the pickup rollers do anything
-            pickupRoller.set(v > 0.3 ? Math.max((-v), -1.0) : v < -0.3 ? 1 : 0); // -in +out
+            pickupRoller.set(v > 0.3 ? (Math.max(-v, -1.0)) : v < -0.3 ? 1 : 0); // -in +out
             SmartDashboard.putNumber("Pickup roller motor", (v > 0.3 ? -1 : v < -0.3 ? 1 : 0));
             SmartDashboard.putNumber("Pickup roller joystick", v);
 
