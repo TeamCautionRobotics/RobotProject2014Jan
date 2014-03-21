@@ -47,6 +47,7 @@ public class RobotMain extends SimpleRobot {
     private boolean triggerButtonDown = false;  //State of the trigger
     private int pos = ROTARY_LOAD;  //The state of the knob
     private int lastPos = ROTARY_LOAD;  //Used to check if the knob has changed
+    private Value pickupValue;
 
     public RobotMain() {
 
@@ -79,8 +80,9 @@ public class RobotMain extends SimpleRobot {
     public void autonomous() {  //This method is called once when the robot is autonomous mode
         int state = 1;
         
-        boolean a = diA.get();
-        boolean b = diB.get();
+        //Not connected yet
+        boolean a = true;// = diA.get();
+        boolean b = false;// = diB.get();
         
         if(a){
             if(b){
@@ -98,7 +100,7 @@ public class RobotMain extends SimpleRobot {
 
         if (state == 1 || state == 2) {
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
-            pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
+            setPickup(Value.kReverse);    //Make sure the frame with the rollers is out of the way
             Timer.delay(1);    //Wait
             trigger.set(Relay.Value.kForward);  //Engauge the trigger
             Timer.delay(1);    //Wait
@@ -107,15 +109,15 @@ public class RobotMain extends SimpleRobot {
         }
         if (state == 2) {
             Timer.delay(1);
-            pickupFrame.set(Value.kForward);
+            setPickup(Value.kForward);
             pickupRoller.set(-1);
             Timer.delay(2);    //Wait
             pickupRoller.set(0);
-            pickupFrame.set(Value.kReverse);
+            setPickup(Value.kReverse);
             Timer.delay(1);
 
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
-            pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
+            setPickup(Value.kReverse);    //Make sure the frame with the rollers is out of the way
             Timer.delay(1);    //Wait
             trigger.set(Relay.Value.kForward);  //Engauge the trigger
             Timer.delay(1);    //Wait
@@ -124,7 +126,7 @@ public class RobotMain extends SimpleRobot {
         }
         if (state == 1 || state == 2 || state == 3) {
             moveAll(1); //Move forward for the mobility points
-            Timer.delay(.5);    //Wait
+            Timer.delay(.7);    //Wait
             moveAll(0); //Stop so we do not crash into the wall
         }
 
@@ -137,19 +139,19 @@ public class RobotMain extends SimpleRobot {
         SmartDashboard.putString("Catapult Relay: ", ValueToString(catapult.get()));
         SmartDashboard.putBoolean("Compressor Enabled", compressor.enabled());
 
-        pickupFrame.set(Value.kForward);    //Pull the frame in
+        setPickup(Value.kForward);    //Pull the frame in
 
         while (this.isOperatorControl() && this.isEnabled()) {  //Everything in here happens forever
             mecanumDrive(getMecX(), getMecY(), getMecRot());    //Drive the robot
             double v = deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY), .5);    //Should the pickup rollers do anything
-            pickupRoller.set(v > 0.3 ? Math.max((-v)*2.0, -1.0) : v < -0.3 ? 1 : 0); // -in +out
+            pickupRoller.set(v > 0.3 ? Math.max((-v), -1.0) : v < -0.3 ? 1 : 0); // -in +out
             SmartDashboard.putNumber("Pickup roller motor", (v > 0.3 ? -1 : v < -0.3 ? 1 : 0));
             SmartDashboard.putNumber("Pickup roller joystick", v);
 
             if (manipulatorStick.getRawButton(3)) { //Move the frame in when the up button is pressed
-                pickupFrame.set(Value.kForward);
+                setPickup(Value.kForward);
             } else if (manipulatorStick.getRawButton(2)) {  //Move the frame out when the down button is pressed
-                pickupFrame.set(Value.kReverse);
+                setPickup(Value.kReverse);
             }
 
             pos = ROTARY_LOAD;  //Default to the "off" position
@@ -201,8 +203,10 @@ public class RobotMain extends SimpleRobot {
 
             if (pressed) {
                 if (pos != ROTARY_LOAD) {   //If we should be able to shoot
-                    pickupFrame.set(Value.kReverse);    //Do not shoot with the frame in the way
-                    Timer.delay(.2);
+                    if(pickupValue.equals(Value.kForward)){
+                        setPickup(Value.kReverse);    //Do not shoot with the frame in the way
+                        Timer.delay(.5);
+                    }
                     trigger.set(Relay.Value.kForward);  //Engauge the trigger
                     new CatapultThread(pos, this).start();  //Do the necessary catapult stuff
                 }
@@ -212,8 +216,10 @@ public class RobotMain extends SimpleRobot {
                 if (pos != ROTARY_LOAD) {   //If we are done shooting
                     trigger.set(Relay.Value.kOff);  //Latch the trigger
                     catapult.set(Relay.Value.kReverse); //Pull the catapult down
-                    Timer.delay(.2);
-                    pickupFrame.set(Value.kForward);
+                    if(pickupValue.equals(Value.kReverse)){
+                        Timer.delay(.2);
+                        setPickup(Value.kForward);
+                    }
                 }
             }
 
@@ -221,6 +227,11 @@ public class RobotMain extends SimpleRobot {
 
             Timer.delay(0.01);  //Do not run the loop to fast
         }
+    }
+    
+    public void setPickup(Value v){
+        pickupFrame.set(v);
+        pickupValue = v;
     }
 
     public void disabled() {

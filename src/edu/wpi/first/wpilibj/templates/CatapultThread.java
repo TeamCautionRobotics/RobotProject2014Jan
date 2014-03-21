@@ -28,7 +28,7 @@ class CatapultThread extends Thread {
             robot.catapult.set(Relay.Value.kForward);
         }
         if (rot == RobotMain.ROTARY_LOW_GOAL) {
-            Timer.delay(.2);
+            Timer.delay(.15);
             robot.catapult.set(Relay.Value.kReverse);
         }
     }
