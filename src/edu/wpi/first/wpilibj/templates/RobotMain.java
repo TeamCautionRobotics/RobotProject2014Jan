@@ -1,6 +1,7 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStationEnhancedIO.*;
 import edu.wpi.first.wpilibj.Joystick;
@@ -26,6 +27,9 @@ public class RobotMain extends SimpleRobot {
     Joystick manipulatorStick = new Joystick(3);    //Joystick for the manipulator
     AxisCamera camera;  //Create the camera
     DriverStation driverStation;    //Create the driver station
+    
+    DigitalInput diA;
+    DigitalInput diB;
 
     Talon fl;   //The motor drivers
     Talon bl;
@@ -54,6 +58,9 @@ public class RobotMain extends SimpleRobot {
         visionProcessing = new VisionProcessing();  //Initalize the vision processing
 
         driverStation = DriverStation.getInstance();    //Initalize the driver station
+        
+        diA = new DigitalInput(13);
+        diB = new DigitalInput(14);
 
         fl = new Talon(2);  //Initalize the talons for each of the four wheels
         bl = new Talon(1);
@@ -71,6 +78,23 @@ public class RobotMain extends SimpleRobot {
 
     public void autonomous() {  //This method is called once when the robot is autonomous mode
         int state = 1;      //1 is single shoot, 2 is double
+        
+        boolean a = diA.get();
+        boolean b = diB.get();
+        
+        if(a){
+            if(b){
+                state = 1; // Shoot then move
+            }else{
+                state = 2; // Shoot, load, shoot, move
+            }
+        }else{
+            if(b){
+                state = 3; // Just move
+            }else{
+                state = 0; // Nothing
+            }
+        }
 
         if (state == 1 || state == 2) {
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
@@ -98,7 +122,7 @@ public class RobotMain extends SimpleRobot {
             trigger.set(Relay.Value.kOff);  //Latch the trigger
             catapult.set(Relay.Value.kReverse); //Pull the catapult back down
         }
-        if (state == 1 || state == 2) {
+        if (state == 1 || state == 2 || state == 3) {
             moveAll(1); //Move forward for the mobility points
             Timer.delay(.5);    //Wait
             moveAll(0); //Stop so we do not crash into the wall
