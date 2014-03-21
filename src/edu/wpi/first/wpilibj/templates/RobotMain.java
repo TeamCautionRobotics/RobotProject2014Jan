@@ -77,22 +77,22 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void autonomous() {  //This method is called once when the robot is autonomous mode
-        int state = 1;      //1 is single shoot, 2 is double
+        int state = 1;
         
         boolean a = diA.get();
         boolean b = diB.get();
         
         if(a){
             if(b){
-                state = 1; // Shoot then move
+                state = 2; // 11 - double shoot then move
             }else{
-                state = 2; // Shoot, load, shoot, move
+                state = 1; // 10 - Shoot then move
             }
         }else{
             if(b){
-                state = 3; // Just move
+                state = 3; // 01 - Just move
             }else{
-                state = 0; // Nothing
+                state = 0; // 00 - Nothing
             }
         }
 
