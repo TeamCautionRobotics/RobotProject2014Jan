@@ -71,8 +71,8 @@ public class RobotMain extends SimpleRobot {
 
     public void autonomous() {  //This method is called once when the robot is autonomous mode
         int state = 1;      //1 is single shoot, 2 is double
-        
-        if(state == 1 || state == 2){
+
+        if (state == 1 || state == 2) {
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
             pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
             Timer.delay(1);    //Wait
@@ -81,7 +81,7 @@ public class RobotMain extends SimpleRobot {
             trigger.set(Relay.Value.kOff);  //Latch the trigger
             catapult.set(Relay.Value.kReverse); //Pull the catapult back down
         }
-        if(state==2){
+        if (state == 2) {
             Timer.delay(1);
             pickupFrame.set(Value.kForward);
             pickupRoller.set(-1);
@@ -89,8 +89,7 @@ public class RobotMain extends SimpleRobot {
             pickupRoller.set(0);
             pickupFrame.set(Value.kReverse);
             Timer.delay(1);
-            
-            
+
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
             pickupFrame.set(Value.kReverse);    //Make sure the frame with the rollers is out of the way
             Timer.delay(1);    //Wait
@@ -99,12 +98,12 @@ public class RobotMain extends SimpleRobot {
             trigger.set(Relay.Value.kOff);  //Latch the trigger
             catapult.set(Relay.Value.kReverse); //Pull the catapult back down
         }
-        if(state==1 || state==2){
+        if (state == 1 || state == 2) {
             moveAll(1); //Move forward for the mobility points
             Timer.delay(.5);    //Wait
             moveAll(0); //Stop so we do not crash into the wall
         }
-        
+
     }
 
     public void operatorControl() { //This method is called once when the robot is teleoperated mode
@@ -184,7 +183,7 @@ public class RobotMain extends SimpleRobot {
                     new CatapultThread(pos, this).start();  //Do the necessary catapult stuff
                 }
             }
-            
+
             if (released) {
                 if (pos != ROTARY_LOAD) {   //If we are done shooting
                     trigger.set(Relay.Value.kOff);  //Latch the trigger
