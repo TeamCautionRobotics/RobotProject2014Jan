@@ -80,6 +80,10 @@ public class RobotMain extends SimpleRobot {
         }else{
             state = 1; // 10 - Shoot then move
         }
+        
+        if(state==2){
+            pickupRoller.set(-.05);
+        }
 
         if (state == 1 || state == 2) {
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
@@ -92,21 +96,21 @@ public class RobotMain extends SimpleRobot {
         }
         if (state == 2) {
             Timer.delay(1);
-            setPickup(Value.kForward);
             pickupRoller.set(-1);
             Timer.delay(2);    //Wait
             pickupRoller.set(0);
-            setPickup(Value.kReverse);
             Timer.delay(1);
 
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
-            setPickup(Value.kReverse);    //Make sure the frame with the rollers is out of the way
             Timer.delay(1);    //Wait
             trigger.set(Relay.Value.kForward);  //Engauge the trigger
             Timer.delay(1);    //Wait
             trigger.set(Relay.Value.kOff);  //Latch the trigger
             catapult.set(Relay.Value.kReverse); //Pull the catapult back down
         }
+        
+        setPickup(Value.kForward);
+            
         if (state == 1 || state == 2 || state == 3) {
             moveAll(1); //Move forward for the mobility points
             Timer.delay(.7);    //Wait
