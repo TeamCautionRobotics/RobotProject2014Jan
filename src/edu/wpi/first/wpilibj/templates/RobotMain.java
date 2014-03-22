@@ -81,8 +81,10 @@ public class RobotMain extends SimpleRobot {
             state = 1; // 10 - Shoot then move
         }
         
+        SmartDashboard.putNumber("Auto State: ", state);
+        
         if(state==2){
-            pickupRoller.set(-.05);
+            //pickupRoller.set(-.1);
         }
 
         if (state == 1 || state == 2) {
@@ -97,9 +99,12 @@ public class RobotMain extends SimpleRobot {
         if (state == 2) {
             Timer.delay(1);
             pickupRoller.set(-1);
-            Timer.delay(2);    //Wait
+            Timer.delay(1.5);    //Wait
             pickupRoller.set(0);
-            Timer.delay(1);
+            setPickup(Value.kForward);
+            Timer.delay(.4);
+            setPickup(Value.kReverse);
+            Timer.delay(.6);
 
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
             Timer.delay(1);    //Wait
@@ -108,14 +113,14 @@ public class RobotMain extends SimpleRobot {
             trigger.set(Relay.Value.kOff);  //Latch the trigger
             catapult.set(Relay.Value.kReverse); //Pull the catapult back down
         }
-        
-        setPickup(Value.kForward);
             
         if (state == 1 || state == 2 || state == 3) {
             moveAll(1); //Move forward for the mobility points
             Timer.delay(.7);    //Wait
             moveAll(0); //Stop so we do not crash into the wall
         }
+        
+        setPickup(Value.kForward);
 
     }
 
