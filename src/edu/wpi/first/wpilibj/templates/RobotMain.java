@@ -1,9 +1,7 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStationEnhancedIO.*;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.Relay.Value;
@@ -56,7 +54,6 @@ public class RobotMain extends SimpleRobot {
         visionProcessing = new VisionProcessing();  //Initalize the vision processing
 
         driverStation = DriverStation.getInstance();    //Initalize the driver station
-        
 
         fl = new Talon(2);  //Initalize the talons for each of the four wheels
         bl = new Talon(1);
@@ -74,18 +71,14 @@ public class RobotMain extends SimpleRobot {
 
     public void autonomous() {  //This method is called once when the robot is autonomous mode
         int state;
-        
-        if(driverStation.getDigitalIn(6)){
+
+        if (driverStation.getDigitalIn(6)) {
             state = 2; // 11 - double shoot then move
-        }else{
+        } else {
             state = 1; // 10 - Shoot then move
         }
-        
+
         SmartDashboard.putNumber("Auto State: ", state);
-        
-        if(state==2){
-            //pickupRoller.set(-.1);
-        }
 
         if (state == 1 || state == 2) {
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
@@ -113,13 +106,13 @@ public class RobotMain extends SimpleRobot {
             trigger.set(Relay.Value.kOff);  //Latch the trigger
             catapult.set(Relay.Value.kReverse); //Pull the catapult back down
         }
-            
+
         if (state == 1 || state == 2 || state == 3) {
             moveAll(1); //Move forward for the mobility points
             Timer.delay(.7);    //Wait
             moveAll(0); //Stop so we do not crash into the wall
         }
-        
+
         setPickup(Value.kForward);
 
     }
@@ -135,7 +128,7 @@ public class RobotMain extends SimpleRobot {
 
         while (this.isOperatorControl() && this.isEnabled()) {  //Everything in here happens forever
             mecanumDrive(getMecX(), getMecY(), getMecRot());    //Drive the robot
-            double v = deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY), .5);    //Should the pickup rollers do anything
+            double v = HelperFunctions.deadZone(manipulatorStick.getAxis(Joystick.AxisType.kY), .5);    //Should the pickup rollers do anything
             pickupRoller.set(v > 0.3 ? (Math.max(-v, -1.0)) : v < -0.3 ? 1 : 0); // -in +out
             SmartDashboard.putNumber("Pickup roller motor", (v > 0.3 ? -1 : v < -0.3 ? 1 : 0));
             SmartDashboard.putNumber("Pickup roller joystick", v);
@@ -195,7 +188,7 @@ public class RobotMain extends SimpleRobot {
 
             if (pressed) {
                 if (pos != ROTARY_LOAD) {   //If we should be able to shoot
-                    if(pickupValue.equals(Value.kForward)){
+                    if (pickupValue.equals(Value.kForward)) {
                         setPickup(Value.kReverse);    //Do not shoot with the frame in the way
                         Timer.delay(.5);
                     }
@@ -208,7 +201,7 @@ public class RobotMain extends SimpleRobot {
                 if (pos != ROTARY_LOAD) {   //If we are done shooting
                     trigger.set(Relay.Value.kOff);  //Latch the trigger
                     catapult.set(Relay.Value.kReverse); //Pull the catapult down
-                    if(pickupValue.equals(Value.kReverse)){
+                    if (pickupValue.equals(Value.kReverse)) {
                         Timer.delay(.2);
                         setPickup(Value.kForward);
                     }
@@ -220,8 +213,8 @@ public class RobotMain extends SimpleRobot {
             Timer.delay(0.01);  //Do not run the loop to fast
         }
     }
-    
-    public void setPickup(Value v){
+
+    public void setPickup(Value v) {
         pickupFrame.set(v);
         pickupValue = v;
     }
@@ -248,28 +241,17 @@ public class RobotMain extends SimpleRobot {
     }
 
     public double getMecX() {   //Get joystick values
-        return deadZone(rightStick.getAxis(Joystick.AxisType.kX));
+        return HelperFunctions.deadZone(rightStick.getAxis(Joystick.AxisType.kX));
     }
 
     public double getMecY() {   //Get joystick values
-        return deadZone(rightStick.getAxis(Joystick.AxisType.kY));
+        return HelperFunctions.deadZone(rightStick.getAxis(Joystick.AxisType.kY));
     }
 
     public double getMecRot() { //Get joystick values
-        return deadZone(leftStick.getAxis(Joystick.AxisType.kX));
+        return HelperFunctions.deadZone(leftStick.getAxis(Joystick.AxisType.kX));
     }
 
-    private double deadZone(double value, double amount) {  //Apply a dead zone to a value
-        return (abs(value) < amount) ? 0 : value;
-    }
-
-    private double deadZone(double value) {
-        return deadZone(value, .2);
-    }
-
-    private double abs(double value) {  //Absoulte value
-        return value < 0 ? -value : value;
-    }
 
     private double[] mecanumDrive(double x, double y, double r) {   //Find the values for the motors based on x, y and rotation values
         x = -x;
@@ -285,10 +267,6 @@ public class RobotMain extends SimpleRobot {
 
         move(fln, frn, bln, brn);
         return values;
-    }
-
-    private double maxAt1(double n) {   //Make the input value between 1 and -1
-        return n < -1 ? -1 : (n > 1 ? 1 : n);
     }
 
     private String ValueToString(Value v) {
@@ -310,9 +288,9 @@ public class RobotMain extends SimpleRobot {
     }
 
     private void move(double flv, double frv, double blv, double brv) {
-        fr.set(-maxAt1(frv));
-        fl.set(maxAt1(flv));
-        br.set(-maxAt1(brv));
-        bl.set(maxAt1(blv));
+        fr.set(-HelperFunctions.maxAt1(frv));
+        fl.set(HelperFunctions.maxAt1(flv));
+        br.set(-HelperFunctions.maxAt1(brv));
+        bl.set(HelperFunctions.maxAt1(blv));
     }
 }
