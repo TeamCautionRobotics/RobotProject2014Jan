@@ -22,6 +22,9 @@ public class RobotMain extends SimpleRobot {
     public static int ROTARY_LOW_GOAL = 2;
     public static int ROTARY_TRUSS = 3;
     public static int ROTARY_HIGH_GOAL = 4;
+    
+    public static int AUTO_SINGLE_SHOOT = 1;
+    public static int AUTO_DOUBLE_SHOOT = 2;
 
     Compressor compressor = new Compressor(1, 1);   //Initalize the compressor
     Joystick leftStick = new Joystick(1);   //Joystick for rotation of the robot
@@ -70,17 +73,17 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void autonomous() {  //This method is called once when the robot is autonomous mode
-        int state;
+        int mode;   //This stores if the robot should shoot the ball once or twice.
 
         if (driverStation.getDigitalIn(6)) {
-            state = 2; // 11 - double shoot then move
+            mode = AUTO_DOUBLE_SHOOT; // 1 - double shoot then move
         } else {
-            state = 1; // 10 - Shoot then move
+            mode = AUTO_SINGLE_SHOOT; // 0 - Shoot then move
         }
 
-        SmartDashboard.putNumber("Auto State: ", state);
+        SmartDashboard.putNumber("Auto State: ", mode);
 
-        if (state == 1 || state == 2) {
+        if (mode == AUTO_SINGLE_SHOOT || mode == AUTO_DOUBLE_SHOOT) {
             catapult.set(Relay.Value.kForward); //Pre-charge the catapult
             setPickup(Value.kReverse);    //Make sure the frame with the rollers is out of the way
             Timer.delay(1);    //Wait
@@ -89,7 +92,7 @@ public class RobotMain extends SimpleRobot {
             trigger.set(Relay.Value.kOff);  //Latch the trigger
             catapult.set(Relay.Value.kReverse); //Pull the catapult back down
         }
-        if (state == 2) {
+        if (mode == AUTO_DOUBLE_SHOOT) {
             Timer.delay(1);
             pickupRoller.set(-1);
             Timer.delay(1.5);    //Wait
@@ -107,7 +110,7 @@ public class RobotMain extends SimpleRobot {
             catapult.set(Relay.Value.kReverse); //Pull the catapult back down
         }
 
-        if (state == 1 || state == 2 || state == 3) {
+        if (mode == AUTO_SINGLE_SHOOT || mode == AUTO_DOUBLE_SHOOT) {
             move(1); //Move forward for the mobility points
             Timer.delay(.7);    //Wait
             move(0); //Stop so we do not crash into the wall
