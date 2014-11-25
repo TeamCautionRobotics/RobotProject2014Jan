@@ -2,3 +2,5 @@
 /build/
 nbproject/private/private.xml
 nbproject/project.bak.xml
+
+.DS_Store
