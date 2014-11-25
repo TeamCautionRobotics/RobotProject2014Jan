@@ -12,6 +12,10 @@ import edu.wpi.first.wpilibj.camera.AxisCamera;
 import edu.wpi.first.wpilibj.image.BinaryImage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
+/**
+ *
+ * @author schuyler
+ */
 public class RobotMain extends SimpleRobot {
 
     public static int ROTARY_LOAD = 1;  //The values for the different modes
@@ -23,7 +27,7 @@ public class RobotMain extends SimpleRobot {
     Joystick leftStick = new Joystick(1);   //Joystick for rotation of the robot
     Joystick rightStick = new Joystick(2);  //Joystick for the xy position of the robot
     Joystick manipulatorStick = new Joystick(3);    //Joystick for the manipulator
-    AxisCamera camera;  //Create the camera
+//    AxisCamera camera;  //Create the camera
     DriverStation driverStation;    //Create the driver station
 
     Talon fl;   //The motor drivers
@@ -37,8 +41,6 @@ public class RobotMain extends SimpleRobot {
     Relay pickupFrame;  //The valve to move the frame with the roller to pickup the ball up or down
     Relay catapult; //The valve to move the catapult up or down
 
-    private VisionProcessing visionProcessing;  //The vision processing object
-
     private boolean triggerButtonDown = false;  //State of the trigger
     private int pos = ROTARY_LOAD;  //The state of the knob
     private int lastPos = ROTARY_LOAD;  //Used to check if the knob has changed
@@ -49,9 +51,7 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void robotInit() {
-        camera = AxisCamera.getInstance("10.14.92.11"); //Initalize the camera
-
-        visionProcessing = new VisionProcessing();  //Initalize the vision processing
+//        camera = AxisCamera.getInstance("10.14.92.11"); //Initalize the camera
 
         driverStation = DriverStation.getInstance();    //Initalize the driver station
 
@@ -108,9 +108,9 @@ public class RobotMain extends SimpleRobot {
         }
 
         if (state == 1 || state == 2 || state == 3) {
-            moveAll(1); //Move forward for the mobility points
+            move(1); //Move forward for the mobility points
             Timer.delay(.7);    //Wait
-            moveAll(0); //Stop so we do not crash into the wall
+            move(0); //Stop so we do not crash into the wall
         }
 
         setPickup(Value.kForward);
@@ -209,7 +209,8 @@ public class RobotMain extends SimpleRobot {
             }
 
             triggerButtonDown = down;   //Update the trigger button state
-
+            
+            //TODO: Test 
             Timer.delay(0.01);  //Do not run the loop to fast
         }
     }
@@ -224,20 +225,7 @@ public class RobotMain extends SimpleRobot {
     }
 
     public void test() {    //This method is called once when the robot is test mode
-        visionProcessing.autonomousInit();
-        BinaryImage filteredImage;
-
-        try {
-            filteredImage = visionProcessing.filterImageTest(camera.getImage());
-            visionProcessing.autonomousUpdate(filteredImage);
-        } catch (Exception ex) {
-            SmartDashboard.putString("Error: ", ex.getMessage());
-        }
-
-        while (this.isTest() && this.isEnabled()) { //Keep the robot from returning errors
-            moveAll(0);
-            Timer.delay(0.1);
-        }
+        
     }
 
     public double getMecX() {   //Get joystick values
@@ -252,7 +240,6 @@ public class RobotMain extends SimpleRobot {
         return HelperFunctions.deadZone(leftStick.getAxis(Joystick.AxisType.kX));
     }
 
-
     private double[] mecanumDrive(double x, double y, double r) {   //Find the values for the motors based on x, y and rotation values
         x = -x;
         y = -y;
@@ -265,7 +252,7 @@ public class RobotMain extends SimpleRobot {
 
         double[] values = new double[4];
 
-        move(fln, frn, bln, brn);
+        RobotMain.this.move(fln, frn, bln, brn);
         return values;
     }
 
@@ -283,8 +270,8 @@ public class RobotMain extends SimpleRobot {
         return "Error";
     }
 
-    private void moveAll(double i) {
-        move(i, i, i, i);
+    private void move(double i) {
+        RobotMain.this.move(i, i, i, i);
     }
 
     private void move(double flv, double frv, double blv, double brv) {
